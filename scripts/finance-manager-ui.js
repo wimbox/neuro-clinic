@@ -104,11 +104,15 @@ class FinanceManagerUI {
         const query = document.getElementById('finance-search').value.toLowerCase();
         const monthFilter = document.getElementById('finance-filter-month').value; // YYYY-MM
 
-        let txs = syncManager.data.finances.transactions || [];
+        let txs = syncManager.getTransactionsByClinic();
 
         // Apply Month Filter
         if (monthFilter) {
-            txs = txs.filter(t => t.date.startsWith(monthFilter));
+            txs = txs.filter(t => {
+                if (!t.date) return false;
+                const cleanDate = t.date.replace(/\//g, '-');
+                return cleanDate.startsWith(monthFilter);
+            });
         }
 
         // Apply Search

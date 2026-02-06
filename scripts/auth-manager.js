@@ -3,7 +3,7 @@
  */
 class AuthManager {
     constructor() {
-        this.currentUser = JSON.parse(sessionStorage.getItem('neuro_current_user')) || null;
+        this.currentUser = JSON.parse(localStorage.getItem('neuro_current_user')) || null;
         this.loginModal = null;
     }
 
@@ -65,7 +65,7 @@ class AuthManager {
 
         if (user) {
             this.currentUser = user;
-            sessionStorage.setItem('neuro_current_user', JSON.stringify(user));
+            localStorage.setItem('neuro_current_user', JSON.stringify(user));
             window.syncManager.logAction(user.username, 'LOGIN', 'دخول ناجح');
             this.hideLogin();
             this.applyPermissions();
@@ -107,7 +107,7 @@ class AuthManager {
             window.syncManager.logAction(this.currentUser.username, 'LOGOUT', 'تم تسجيل الخروج');
         }
         this.currentUser = null;
-        sessionStorage.removeItem('neuro_current_user');
+        localStorage.removeItem('neuro_current_user');
         window.location.reload();
     }
 

@@ -55,10 +55,10 @@ class DashboardUI {
             document.body.appendChild(overlay);
 
             const confirmBtn = overlay.querySelector('.btn-modal-confirm');
-            confirmBtn.onclick = () => {
+            confirmBtn.onclick = async () => {
                 // If onConfirm returns false (validation failed), do not close
                 if (onConfirm) {
-                    const result = onConfirm();
+                    const result = await onConfirm();
                     if (result === false) return;
                 }
                 overlay.remove();
@@ -1789,14 +1789,27 @@ class DashboardUI {
         const reader = new FileReader();
         reader.onload = (e) => {
             const content = e.target.result;
-            showNeuroModal('تأكيد الاستعادة', 'هل أنت متأكد؟ سيتم حذف جميع البيانات الحالية واستبدالها بمحتوى الملف المرفوع.', () => {
+            showNeuroModal('تأكيد الاستعادة', 'هل أنت متأكد؟ سيتم حذف جميع البيانات الحالية واستبدالها بمحتوى الملف المرفوع.', async () => {
                 if (syncManager.restoreBackup(content)) {
                     window.soundManager?.playSuccess();
-                    alert('تم استعادة البيانات بنجاح! سيتم إعادة تحميل الصفحة الآن.');
+
+                    // Force immediate cloud sync and wait for it
+                    if (window.syncManager && typeof db !== 'undefined') {
+                        // Show "Syncing..." message inside the modal content
+                        const statusMsg = document.createElement('div');
+                        statusMsg.innerHTML = '<div style="text-align:center; padding:15px; color:#00eaff;"><i class="fa-solid fa-sync fa-spin"></i> جاري مزامنة البيانات المستعادة مع السحابة... يرجى الانتظار</div>';
+                        document.querySelector('.neuro-modal-msg').appendChild(statusMsg);
+
+                        await window.syncManager.triggerCloudSync();
+                    }
+
+                    alert('تم استعادة البيانات بنجاح ومزامنتها! سيتم إعادة تحميل الصفحة الآن.');
                     window.location.reload();
+                    return true;
                 } else {
                     alert('فشل استعادة البيانات. يرجى التأكد من صحة الملف.');
                     window.soundManager?.playError();
+                    return false;
                 }
             });
         };
