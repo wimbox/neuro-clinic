@@ -97,6 +97,30 @@ class SyncManager {
             // Persistence: Force save back to localStorage if we had to fix things
             localStorage.setItem(this.DB_KEY, JSON.stringify(parsed));
 
+            // --- Data Self-Healing Migration (Fix for discrepancies) ---
+            let repaired = false;
+            const defaultClinicId = parsed.settings?.activeClinicId || 'clinic-default';
+
+            // 1. Repair Patients
+            (parsed.patients || []).forEach(p => {
+                if (!p.clinicId) { p.clinicId = defaultClinicId; repaired = true; }
+            });
+            // 2. Repair Appointments
+            (parsed.appointments || []).forEach(a => {
+                if (!a.clinicId) { a.clinicId = defaultClinicId; repaired = true; }
+            });
+            // 3. Repair Transactions
+            if (parsed.finances?.transactions) {
+                parsed.finances.transactions.forEach(t => {
+                    if (!t.clinicId) { t.clinicId = defaultClinicId; repaired = true; }
+                });
+            }
+
+            if (repaired) {
+                console.log("SyncManager: Data self-healed (assigned clinic IDs to legacy records).");
+                localStorage.setItem(this.DB_KEY, JSON.stringify(parsed));
+            }
+
             if (parsed.settings.lastPatientCode === undefined) {
                 parsed.settings.lastPatientCode = GLOBAL_CONFIG.STARTING_CODE;
             }
@@ -139,6 +163,13 @@ class SyncManager {
                 // -------------------------------------------------------------
             }
             if (!parsed.auditLog) parsed.auditLog = [];
+
+            // --- Document Integration Migration ---
+            if (!parsed.patientDocs) {
+                const legacyDocs = localStorage.getItem('neuro-patient-documents');
+                parsed.patientDocs = legacyDocs ? JSON.parse(legacyDocs) : {};
+                console.log("SyncManager: Migrated legacy documents to main sync data.");
+            }
             // --------------------------------------------------
 
             // --- Migration for Multi-Clinic Support ---
@@ -224,6 +255,7 @@ class SyncManager {
             ],
             auditLog: [], // { timestamp, user, action, details }
             patients: [],
+            patientDocs: {}, // { patientId: [docs] }
             appointments: [],
             finances: {
                 transactions: [],
@@ -391,7 +423,7 @@ class SyncManager {
         if (this.syncTimeout) clearTimeout(this.syncTimeout);
         this.syncTimeout = setTimeout(() => {
             this.triggerCloudSync();
-        }, 1500); // 1.5s debounce
+        }, 500); // 0.5s debounce for faster real-time feeling
     }
 
     /**
@@ -466,9 +498,22 @@ class SyncManager {
         const currentUser = window.authManager?.currentUser?.username || 'System';
         const patient = this.data.patients.find(p => p.id === id);
         if (patient) {
-            this.logAction(currentUser, 'DELETE_PATIENT', `حذف المريض: ${patient.name} (#${patient.patientCode})`);
+            this.logAction(currentUser, 'DELETE_PATIENT', `حذف المريض وسجلاته المالية: ${patient.name} (#${patient.patientCode})`);
+
+            // 1. Remove Patient
             this.data.patients = this.data.patients.filter(p => p.id !== id);
+
+            // 2. Remove Appointments
             this.data.appointments = this.data.appointments.filter(a => a.patientId !== id);
+
+            // 3. Remove Financial Transactions
+            this.data.finances.transactions = this.data.finances.transactions.filter(t => t.patientId !== id);
+
+            // 4. Remove Ledger Entry
+            if (this.data.finances.ledger[id]) {
+                delete this.data.finances.ledger[id];
+            }
+
             this.saveLocal();
         }
     }

@@ -259,7 +259,8 @@ class FinanceManagerUI {
 
             if (!amount || amount <= 0 || !desc) {
                 window.soundManager.playError();
-                alert('يرجى إدخال المبلغ والوصف بشكل صحيح.');
+                if (window.showNeuroToast) window.showNeuroToast('يرجى إدخال المبلغ والوصف بشكل صحيح.', 'error');
+                else alert('يرجى إدخال المبلغ والوصف بشكل صحيح.');
                 return;
             }
 
@@ -392,29 +393,31 @@ class FinanceManagerUI {
         window.print();
     }
 
-    showNotification(msg) {
+    showNotification(msg, type = 'success') {
+        // Use global toast if available (from dashboard or defined here)
+        if (window.showNeuroToast) {
+            window.showNeuroToast(msg, type);
+            return;
+        }
+
         const div = document.createElement('div');
         div.style.cssText = `
             position: fixed;
             bottom: 30px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(16, 185, 129, 0.9);
+            background: ${type === 'success' ? 'rgba(16, 185, 129, 0.9)' : 'rgba(239, 68, 68, 0.9)'};
             color: white;
             padding: 15px 30px;
             border-radius: 50px;
             font-weight: bold;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
             z-index: 3000;
-            animation: slideUp 0.5s ease;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
         `;
-        div.innerHTML = `<i class="fa-solid fa-check-circle"></i> ${msg}`;
+        div.innerHTML = `<i class="fa-solid ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i> ${msg}`;
         document.body.appendChild(div);
-
-        // CSS Animation
-        const style = document.createElement('style');
-        style.innerHTML = `@keyframes slideUp { from { transform: translate(-50%, 100%); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }`;
-        document.head.appendChild(style);
 
         setTimeout(() => div.remove(), 3000);
     }

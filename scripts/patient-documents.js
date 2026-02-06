@@ -11,6 +11,7 @@ class PatientDocuments {
      * Load documents from localStorage
      */
     loadDocuments() {
+        if (window.syncManager?.data?.patientDocs) return window.syncManager.data.patientDocs;
         const data = localStorage.getItem('neuro-patient-documents');
         return data ? JSON.parse(data) : {};
     }
@@ -19,7 +20,12 @@ class PatientDocuments {
      * Save documents to localStorage
      */
     saveDocuments() {
-        localStorage.setItem('neuro-patient-documents', JSON.stringify(this.documents));
+        if (window.syncManager) {
+            window.syncManager.data.patientDocs = this.documents;
+            window.syncManager.saveLocal();
+        } else {
+            localStorage.setItem('neuro-patient-documents', JSON.stringify(this.documents));
+        }
     }
 
     /**
@@ -52,10 +58,12 @@ class PatientDocuments {
                 const snapshot = await storageRef.put(documentData.blob);
                 const downloadURL = await snapshot.ref.getDownloadURL();
                 doc.cloudUrl = downloadURL;
-                // Once uploaded to storage, we can optionally clear the bulky base64 fileData 
-                // to save local storage space, or keep it for offline.
-                // For now, let's keep it but mark cloud as success.
-                console.log("Documents Sync: Success. URL:", downloadURL);
+
+                // --- Smart Link Logic ---
+                // Purge local base64 to save local storage space (avoid 5MB browser limit)
+                // Now only the cloud URL resides in local memory.
+                doc.fileData = null;
+                console.log("Documents Sync: Success. Local storage purged, using smart link.");
             } catch (err) {
                 console.error("Documents Sync: Failed to upload to cloud storage.", err);
             }

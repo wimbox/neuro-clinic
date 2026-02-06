@@ -10,6 +10,7 @@ class DashboardUI {
             appointments: document.getElementById('stat-appointments-today'),
             income: document.getElementById('stat-income-total'),
             expenses: document.getElementById('stat-expenses-total'),
+            dues: document.getElementById('stat-dues-total'),
             netProfit: document.getElementById('stat-net-profit')
         };
 
@@ -67,6 +68,36 @@ class DashboardUI {
                 overlay.querySelector('.btn-modal-cancel').onclick = () => overlay.remove();
             }
             overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+        };
+
+        // Custom Toast Notification (Premium Look)
+        window.showNeuroToast = (message, type = 'success') => {
+            const toast = document.createElement('div');
+            toast.className = 'neuro-toast';
+            const icon = type === 'success' ? 'fa-circle-check' : (type === 'error' ? 'fa-circle-xmark' : 'fa-circle-info');
+            const color = type === 'success' ? '#10b981' : (type === 'error' ? '#ef4444' : '#00eaff');
+
+            toast.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 15px; padding: 15px 25px; background: rgba(15, 23, 42, 0.9); border: 1px solid ${color}; border-radius: 12px; backdrop-filter: blur(15px); box-shadow: 0 10px 40px rgba(0,0,0,0.5); border-left: 5px solid ${color};">
+                    <i class="fa-solid ${icon}" style="color: ${color}; font-size: 1.2rem;"></i>
+                    <span style="color: #fff; font-weight: 700;">${message}</span>
+                </div>
+            `;
+            toast.style.cssText = `position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px); z-index: 10000; transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); opacity: 0;`;
+            document.body.appendChild(toast);
+
+            // Trigger animation
+            setTimeout(() => {
+                toast.style.transform = 'translateX(-50%) translateY(0)';
+                toast.style.opacity = '1';
+            }, 100);
+
+            // Auto-hide
+            setTimeout(() => {
+                toast.style.transform = 'translateX(-50%) translateY(100px)';
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 500);
+            }, 4000);
         };
 
         // Appointment Modal Logic
@@ -791,12 +822,23 @@ class DashboardUI {
 
         const income = monthlyTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
         const expenses = monthlyTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
+
+        // Calculate total patient dues across active clinic
+        let totalDues = 0;
+        patients.forEach(p => {
+            const ledger = syncManager.data.finances.ledger[p.id];
+            if (ledger && ledger.balance < 0) {
+                totalDues += Math.abs(ledger.balance);
+            }
+        });
+
         const netProfit = income - expenses;
 
         if (this.stats.patients) this.stats.patients.textContent = patients.length;
         if (this.stats.appointments) this.stats.appointments.textContent = apptsToday;
         if (this.stats.income) this.stats.income.textContent = income.toLocaleString() + " EGP";
         if (this.stats.expenses) this.stats.expenses.textContent = expenses.toLocaleString() + " EGP";
+        if (this.stats.dues) this.stats.dues.textContent = totalDues.toLocaleString() + " EGP";
         if (this.stats.netProfit) {
             this.stats.netProfit.textContent = netProfit.toLocaleString() + " EGP";
             this.stats.netProfit.style.color = netProfit >= 0 ? '#10b981' : '#ef4444';
@@ -1324,7 +1366,7 @@ class DashboardUI {
                     const role = document.getElementById('user-new-role').value;
 
                     if (!name || !username || !password) {
-                        alert('يرجى إكمال كافة البيانات');
+                        window.showNeuroToast('يرجى إكمال كافة البيانات', 'error');
                         return false;
                     }
 
@@ -1508,13 +1550,13 @@ class DashboardUI {
             const assignedClinics = Array.from(document.querySelectorAll('input[name="assignedClinic"]:checked')).map(cb => cb.value);
 
             if (!name || !username || !password) {
-                alert('يرجى إكمال الحقول الإجبارية (*)');
+                window.showNeuroToast('يرجى إكمال الحقول الإجبارية (*)', 'error');
                 window.soundManager.playError();
                 return false;
             }
 
             if (assignedClinics.length === 0) {
-                alert('يجب تعيين عيادة واحدة على الأقل لهذا الموظف!');
+                window.showNeuroToast('يجب تعيين عيادة واحدة على الأقل لهذا الموظف!', 'info');
                 window.soundManager.playError();
                 return false;
             }
@@ -1522,7 +1564,7 @@ class DashboardUI {
             // Check if username already exists
             const exists = syncManager.data.users.find(u => u.username === username);
             if (exists) {
-                alert('اسم المستخدم موجود بالفعل! اختر اسماً آخر.');
+                window.showNeuroToast('اسم المستخدم موجود بالفعل! اختر اسماً آخر.', 'error');
                 window.soundManager.playError();
                 return false;
             }
@@ -1766,7 +1808,7 @@ class DashboardUI {
     async exportPatientsCSV() {
         const csv = syncManager.exportPatientsCSV();
         if (!csv) {
-            alert('لا توجد بيانات مرضى للتصدير!');
+            window.showNeuroToast('لا توجد بيانات مرضى للتصدير!', 'info');
             return;
         }
 
@@ -1820,15 +1862,15 @@ class DashboardUI {
 
                         const syncSuccess = await window.syncManager.triggerCloudSync();
                         if (!syncSuccess) {
-                            alert('⚠️ تم تحديث البيانات محلياً ولكن فشل الرفع للسحاب. سيحاول النظام المزامنة لاحقاً عند توفر اتصال.');
+                            window.showNeuroToast('⚠️ تم تحديث البيانات محلياً ولكن فشل الرفع للسحاب. سيتم الرفع لاحقأ.', 'error');
                         }
                     }
 
-                    alert('تم استعادة البيانات بنجاح! سيتم إعادة تحميل التطبيق الآن.');
-                    window.location.reload();
+                    window.showNeuroToast('تم استعادة البيانات بنجاح! جارِ إعادة التشغيل..');
+                    setTimeout(() => window.location.reload(), 2000);
                     return true;
                 } else {
-                    alert('خطأ: الملف المرفوع ليس نسخة احتياطية صحيحة.');
+                    window.showNeuroToast('خطأ: الملف المرفوع ليس نسخة احتياطية صحيحة.', 'error');
                     window.soundManager?.playError();
                     return false;
                 }
@@ -1857,12 +1899,12 @@ class DashboardUI {
                         await window.syncManager.triggerCloudSync();
                     }
 
-                    alert(`تم استيراد ${result.count} مريض بنجاح!`);
+                    window.showNeuroToast(`تم استيراد ${result.count} مريض بنجاح!`);
                     this.renderPatientsManagement();
                     this.updateStats();
                     return true;
                 } else {
-                    alert('فشل استيراد الملف. تأكد أن الملف بصيغة CSV صحيحة ومطابقة لتنسيق النظام.');
+                    window.showNeuroToast('فشل استيراد الملف. تأكد من الصيغة.', 'error');
                     window.soundManager?.playError();
                     return false;
                 }

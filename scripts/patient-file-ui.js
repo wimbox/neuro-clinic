@@ -183,12 +183,14 @@ class PatientFileUI {
         reader.readAsDataURL(file);
     }
 
-    confirmUpload(name, type, data, size) {
+    async confirmUpload(name, type, data, size) {
         // Close modal using the correct overlay class
         const overlay = document.querySelector('.neuro-modal-overlay');
         if (overlay) overlay.remove();
 
-        window.patientDocuments.addDocument(this.currentPatientId, {
+        window.showNeuroToast('جاري رفع المستند للسحاب.. يرجى الانتظار', 'info');
+
+        await window.patientDocuments.addDocument(this.currentPatientId, {
             name: name,
             type: type,
             fileData: data,
@@ -199,13 +201,15 @@ class PatientFileUI {
 
         this.renderDocuments();
         window.soundManager.playSuccess();
+        window.showNeuroToast('تم الحفظ بالرابط السحابي الذكي');
     }
 
     deleteDocument(docId) {
-        if (confirm('هل أنت متأكد من حذف هذا المستند؟')) {
+        showNeuroModal('تأكيد الحذف', 'هل أنت متأكد من حذف هذا المستند نهائياً؟', () => {
             window.patientDocuments.deleteDocument(this.currentPatientId, docId);
             this.renderDocuments();
-        }
+            window.showNeuroToast('تم حذف المستند بنجاح');
+        }, true);
     }
 
     viewDocument(docId) {
@@ -215,13 +219,19 @@ class PatientFileUI {
         const isImage = doc.mimeType.startsWith('image/');
         const isPDF = doc.mimeType === 'application/pdf';
 
+        const fileUri = doc.cloudUrl || doc.fileData; // Unified URI
+        if (!fileUri) {
+            window.showNeuroToast('خطأ: لم يتم العثور على محتوى الملف محلياً أو سحابياً.', 'error');
+            return;
+        }
+
         let content = '';
         if (isImage) {
-            content = `<img src="${doc.fileData}" style="max-width: 100%; max-height: 80vh; border-radius: 8px;">`;
+            content = `<img src="${fileUri}" style="max-width: 100%; max-height: 80vh; border-radius: 8px;">`;
         } else if (isPDF) {
-            content = `<iframe src="${doc.fileData}" style="width: 100%; height: 80vh; border: none;"></iframe>`;
+            content = `<iframe src="${fileUri}" style="width: 100%; height: 80vh; border: none;"></iframe>`;
         } else {
-            content = `<p style="text-align: center; padding: 20px;">لا يمكن عرض هذا الملف مباشرة. <a href="${doc.fileData}" download="${doc.name}" style="color: #00eaff;">تحميل الملف</a></p>`;
+            content = `<p style="text-align: center; padding: 20px;">لا يمكن عرض هذا الملف مباشرة. <a href="${fileUri}" download="${doc.name}" style="color: #00eaff;">تحميل الملف</a></p>`;
         }
 
         // Show in a large custom modal or reuse neuro modal with custom content

@@ -43,12 +43,12 @@ class ClinicManager {
             window.soundManager?.playSuccess();
 
             const clinic = syncManager.getActiveClinic();
-            this.showNotification(`جاري التحويل إلى: ${clinic.name}...`);
+            window.showNeuroToast(`جاري التحويل إلى: ${clinic.name}...`, 'info');
 
             // Use a slight delay then reload to ensure all data is refreshed perfectly
             setTimeout(() => {
                 window.location.reload();
-            }, 800);
+            }, 1000);
         }
     }
 
@@ -148,7 +148,7 @@ class ClinicManager {
             const phone = document.getElementById('clinic-phone').value.trim();
 
             if (!name) {
-                alert('يرجى إدخال اسم العيادة');
+                window.showNeuroToast('يرجى إدخال اسم العيادة', 'error');
                 window.soundManager?.playError();
                 return false;
             }
@@ -198,7 +198,7 @@ class ClinicManager {
             const phone = document.getElementById('edit-clinic-phone').value.trim();
 
             if (!name) {
-                alert('يرجى إدخال اسم العيادة');
+                window.showNeuroToast('يرجى إدخال اسم العيادة', 'error');
                 window.soundManager?.playError();
                 return false;
             }
@@ -220,7 +220,7 @@ class ClinicManager {
 
     deleteClinic(clinicId) {
         if (clinicId === 'clinic-default') {
-            alert('خطأ: لا يمكن حذف العيادة الرئيسية للنظام.');
+            window.showNeuroToast('خطأ: لا يمكن حذف العيادة الرئيسية للنظام.', 'error');
             window.soundManager?.playError();
             return;
         }
@@ -246,7 +246,7 @@ class ClinicManager {
         showNeuroModal('حذف العيادة', modalHTML, () => {
             const password = document.getElementById('delete-clinic-password').value;
             if (password !== 'admin123') {
-                alert('كلمة المرور غير صحيحة!');
+                window.showNeuroToast('كلمة المرور غير صحيحة!', 'error');
                 window.soundManager?.playError();
                 return false;
             }
@@ -262,33 +262,19 @@ class ClinicManager {
                 }
                 return true;
             } else {
-                alert('لا يمكن حذف العيادة لأنها تحتوي على بيانات مسجلة.');
+                window.showNeuroToast('لا يمكن حذف العيادة لأنها تحتوي على بيانات مسجلة.', 'info');
                 window.soundManager?.playError();
                 return false;
             }
         });
     }
 
-    showNotification(msg) {
-        const div = document.createElement('div');
-        div.style.cssText = `
-            position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 234, 255, 0.9);
-            color: #000;
-            padding: 15px 30px;
-            border-radius: 50px;
-            font-weight: bold;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            z-index: 3000;
-            animation: slideUp 0.5s ease;
-        `;
-        div.innerHTML = `<i class="fa-solid fa-check-circle"></i> ${msg}`;
-        document.body.appendChild(div);
-
-        setTimeout(() => div.remove(), 3000);
+    showNotification(msg, type = 'success') {
+        if (window.showNeuroToast) {
+            window.showNeuroToast(msg, type);
+        } else {
+            console.log("Notification fallback:", msg);
+        }
     }
 }
 
