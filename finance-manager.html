@@ -270,12 +270,32 @@
 
     <!-- Modals & Sounds will be handled by JS -->
 
+    <!-- Firebase SDKs (Compat Mode) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-storage-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+    <script src="scripts/firebase-config.js"></script>
+
     <script src="scripts/sync-manager.js"></script>
+    <script src="scripts/auth-manager.js"></script>
     <script src="scripts/sound-manager.js"></script>
     <script src="scripts/finance-manager-ui.js"></script>
     <script>
         // Set Date
         document.getElementById('current-date').innerText = new Date().toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (window.authManager) window.authManager.init();
+
+            // Attempt to pull latest data from cloud on start
+            if (window.syncManager) {
+                const success = await window.syncManager.pullFromCloud();
+                if (success) {
+                    console.log("Finance: Data synced from cloud on startup.");
+                }
+            }
+        });
     </script>
 </body>
 

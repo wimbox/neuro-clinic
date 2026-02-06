@@ -170,6 +170,19 @@ class DashboardUI {
 
         this.initUsersAndLogs();
 
+        // Listen for Real-time Cloud Sync or Cross-tab Sync
+        window.addEventListener('syncDataRefreshed', () => {
+            console.log("DashboardUI: Data refreshed from sync. Updating tables...");
+            this.updateStats();
+            this.renderTodayAppointments();
+            if (!this.tables.allAppointments?.parentElement.classList.contains('hidden')) {
+                this.renderAllAppointments();
+            }
+            if (!this.tables.patients?.classList.contains('hidden')) {
+                this.renderPatientsManagement();
+            }
+        });
+
         setTimeout(() => window.soundManager.playStartup(), 1000);
     }
 

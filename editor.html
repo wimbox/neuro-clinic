@@ -408,6 +408,7 @@ Cataflam 50mg
     <script src="scripts/firebase-config.js"></script>
 
     <script src="scripts/sync-manager.js"></script>
+    <script src="scripts/auth-manager.js"></script>
     <script src="scripts/patients.js"></script>
     <script src="scripts/medicines.js"></script>
     <script src="scripts/user_medicines.js"></script>
@@ -417,8 +418,19 @@ Cataflam 50mg
     <script src="scripts/suggestions.js"></script>
     <script src="scripts/app.js?v=2.3"></script>
 
-    <!-- Cloud Sync UI Controller -->
     <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (window.authManager) window.authManager.init();
+
+            // Attempt to pull latest data from cloud on start
+            if (window.syncManager) {
+                const success = await window.syncManager.pullFromCloud();
+                if (success) {
+                    console.log("Editor: Data synced from cloud on startup.");
+                }
+            }
+        });
+
         window.addEventListener('syncStatusChanged', (e) => {
             const { status, latency } = e.detail;
             const sensor = document.getElementById('sync-sensor');

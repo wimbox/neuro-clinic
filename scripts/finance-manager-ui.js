@@ -49,6 +49,13 @@ class FinanceManagerUI {
             }
         });
 
+        // Listen for Real-time Cloud Sync
+        window.addEventListener('syncDataRefreshed', () => {
+            console.log("FinanceManagerUI: Data refreshed from sync. Updating...");
+            this.renderTable();
+            this.updateStats();
+        });
+
         // Event Listeners
         document.getElementById('btn-add-income').addEventListener('click', () => this.openAddModal('income'));
         document.getElementById('btn-add-expense-main').addEventListener('click', () => this.openAddModal('expense'));

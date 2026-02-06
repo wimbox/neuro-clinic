@@ -16,6 +16,34 @@ class SyncManager {
         this.data = this.loadLocal();
         this.cloudStatus = 'offline'; // 'offline', 'syncing', 'online', 'error'
         this.lastLatency = 0;
+        this.syncTimeout = null;
+
+        // Initialize real-time synchronization listeners
+        this.initSyncListeners();
+    }
+
+    /**
+     * Set up listeners for cross-tab and cross-device synchronization.
+     */
+    initSyncListeners() {
+        // 1. Cross-Tab Sync: Listen for changes from other tabs on the same computer
+        window.addEventListener('storage', (e) => {
+            if (e.key === this.DB_KEY && e.newValue) {
+                console.log("SyncManager: Data updated in another tab. Syncing local state...");
+                this.data = JSON.parse(e.newValue);
+                this.notifyDataChanged();
+            }
+        });
+
+        // 2. Cross-Device Sync: Initialize Firestore listener after a small delay
+        // to ensure Firebase SDK and 'db' are ready.
+        setTimeout(() => this.startCloudObserver(), 1000);
+    }
+
+    notifyDataChanged() {
+        // Dispatch event for UI components to refresh
+        window.dispatchEvent(new CustomEvent('syncDataRefreshed', { detail: this.data }));
+        this.updateSyncUI();
     }
 
     loadLocal() {
@@ -285,8 +313,55 @@ class SyncManager {
     }
 
     saveLocal() {
+        // Track the exact moment this local change occurred
+        this.data.settings.lastLocalUpdate = new Date().toISOString();
         localStorage.setItem(this.DB_KEY, JSON.stringify(this.data));
-        this.triggerCloudSync();
+
+        // Debounce cloud sync to avoid rapid consecutive writes
+        if (this.syncTimeout) clearTimeout(this.syncTimeout);
+        this.syncTimeout = setTimeout(() => {
+            this.triggerCloudSync();
+        }, 1500); // 1.5s debounce
+    }
+
+    /**
+     * Real-time listener for Firestore changes.
+     */
+    startCloudObserver() {
+        if (typeof db === 'undefined' || !db) {
+            console.log("Cloud Observer: Firebase/Firestore not available.");
+            return;
+        }
+
+        console.log("Cloud Observer: Starting real-time listener...");
+        db.collection('app_data').doc('clinic_master_data').onSnapshot((doc) => {
+            if (doc.exists) {
+                const cloudData = doc.data();
+
+                // Compare timestamps to decide if we should update local state
+                // Only pull if cloud data is newer than our last session's data
+                const cloudTime = cloudData.updatedAt?.toDate?.()?.getTime() || 0;
+                const lastSyncTime = new Date(this.data.settings?.lastSync || 0).getTime();
+                const lastLocalUpdateTime = new Date(this.data.settings?.lastLocalUpdate || 0).getTime();
+
+                // Logic: Only pull if cloud is newer than our last session's sync 
+                // AND we don't have unsynced local changes that are EVEN NEWER than the cloud data.
+                // This prevents the cloud from overwriting a change you JUST made but haven't uploaded yet.
+                if (cloudTime > lastSyncTime && cloudTime > lastLocalUpdateTime) {
+                    console.log("Cloud Observer: Newer data found in cloud. Merging...");
+                    this.data = cloudData;
+                    // Persist locally
+                    localStorage.setItem(this.DB_KEY, JSON.stringify(this.data));
+                    this.notifyDataChanged();
+                } else {
+                    console.log("Cloud Observer: Cloud update ignored (we have newer or equal local data).");
+                }
+            }
+        }, (error) => {
+            console.error("Cloud Observer error:", error);
+            this.cloudStatus = 'error';
+            this.updateSyncUI();
+        });
     }
 
     // --- Patient Operations (CRUD) ---
@@ -537,6 +612,9 @@ class SyncManager {
             const docId = 'clinic_master_data';
 
             console.log("Cloud sync: Syncing data to Firestore...");
+            // Update lastSync timestamp locally before uploading
+            this.data.settings.lastSync = new Date().toISOString();
+
             await db.collection('app_data').doc(docId).set({
                 ...this.data,
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -578,21 +656,30 @@ class SyncManager {
         if (typeof db === 'undefined' || !db) return false;
 
         try {
+            this.cloudStatus = 'syncing';
+            this.updateSyncUI();
+
             const doc = await db.collection('app_data').doc('clinic_master_data').get();
             if (doc.exists) {
                 const cloudData = doc.data();
-                // Basic check: don't overwrite if cloudData is empty or invalid
                 if (cloudData.patients) {
+                    // Convert Firestore Timestamps to ISO strings for our local data model
+                    if (cloudData.updatedAt?.toDate) {
+                        cloudData.settings.lastSync = cloudData.updatedAt.toDate().toISOString();
+                    }
+
                     this.data = cloudData;
-                    // Save to local without triggering recursive sync
                     localStorage.setItem(this.DB_KEY, JSON.stringify(this.data));
-                    console.log("Cloud data pulled and applied successfully.");
+                    console.log("Cloud pull: Applied successfully.");
+                    this.notifyDataChanged();
                     return true;
                 }
             }
         } catch (error) {
             console.error("Cloud pull failed:", error);
+            this.cloudStatus = 'error';
         }
+        this.updateSyncUI();
         return false;
     }
 }
