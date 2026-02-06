@@ -102,6 +102,19 @@
                     </div>
                 </div>
 
+                <!-- Cloud Sync Sensor -->
+                <div class="sync-sensor" id="sync-sensor" title="حالة الاتصال السحابي وسرعة الاستجابة">
+                    <div class="sync-status-dot"></div>
+                    <div class="sync-info">
+                        <span class="sync-label">Cloud Sync</span>
+                        <span class="sync-latency" id="sync-latency">---</span>
+                    </div>
+                    <button onclick="window.syncManager.triggerCloudSync()"
+                        style="background:transparent; border:none; color:var(--text-secondary); cursor:pointer; padding:5px; margin-right:5px;">
+                        <i class="fa-solid fa-rotate"></i>
+                    </button>
+                </div>
+
                 <div class="search-bar" style="position: relative;">
                     <i class="fa-solid fa-magnifying-glass" style="color: var(--text-secondary);"></i>
                     <input type="text" id="global-patient-search" placeholder="بحث سريع عن مريض...">
@@ -801,7 +814,31 @@
                 }
             }
         });
+
+        // Cloud Sync UI Controller
+        window.addEventListener('syncStatusChanged', (e) => {
+            const { status, latency } = e.detail;
+            const sensor = document.getElementById('sync-sensor');
+            const latencyEl = document.getElementById('sync-latency');
+            if (!sensor || !latencyEl) return;
+
+            // Update classes
+            sensor.classList.remove('online', 'syncing', 'error');
+            if (status !== 'offline') sensor.classList.add(status);
+
+            // Update text
+            if (status === 'syncing') {
+                latencyEl.textContent = 'Syncing...';
+            } else if (latency > 0) {
+                latencyEl.textContent = `${latency}ms`;
+            } else if (status === 'error') {
+                latencyEl.textContent = 'Error';
+            } else {
+                latencyEl.textContent = 'Offline';
+            }
+        });
     </script>
 </body>
+
 
 </html>

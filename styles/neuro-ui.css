@@ -977,3 +977,82 @@ body {
     border-color: rgba(16, 185, 129, 0.8);
     box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
 }
+
+/* Cloud Sync Sensor Styling */
+.sync-sensor {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(15, 23, 42, 0.6);
+    padding: 6px 15px;
+    border-radius: 50px;
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(10px);
+    margin-right: 15px;
+    transition: all 0.3s ease;
+}
+
+.sync-status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #64748b;
+    /* Offline */
+    box-shadow: 0 0 5px #64748b;
+    transition: all 0.3s;
+}
+
+.sync-sensor.online .sync-status-dot {
+    background: #10b981;
+    box-shadow: 0 0 10px #10b981;
+}
+
+.sync-sensor.syncing .sync-status-dot {
+    background: #f59e0b;
+    box-shadow: 0 0 10px #f59e0b;
+    animation: pulse-sync 1s infinite alternate;
+}
+
+.sync-sensor.error .sync-status-dot {
+    background: #ef4444;
+    box-shadow: 0 0 10px #ef4444;
+}
+
+.sync-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.sync-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.sync-latency {
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: var(--accent-blue);
+    font-family: monospace;
+}
+
+@keyframes pulse-sync {
+    from {
+        opacity: 0.4;
+        transform: scale(0.8);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1.1);
+    }
+}
+
+.sync-sensor:hover {
+    border-color: var(--accent-blue);
+    background: rgba(0, 234, 255, 0.05);
+    cursor: help;
+}

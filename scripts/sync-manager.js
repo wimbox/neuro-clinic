@@ -14,6 +14,8 @@ class SyncManager {
         this.DB_KEY = 'neuro_clinic_data_v1';
         // Force Reload Logic Fix
         this.data = this.loadLocal();
+        this.cloudStatus = 'offline'; // 'offline', 'syncing', 'online', 'error'
+        this.lastLatency = 0;
     }
 
     loadLocal() {
@@ -498,25 +500,51 @@ class SyncManager {
     async triggerCloudSync() {
         if (typeof db === 'undefined' || !db) {
             console.log("Cloud sync: Firebase not initialized or configured.");
+            this.cloudStatus = 'offline';
+            this.updateSyncUI();
             return;
         }
+
+        const startTime = performance.now();
+        this.cloudStatus = 'syncing';
+        this.updateSyncUI();
 
         try {
             // Get current clinic ID for document partitioning (optional but better)
             const docId = 'clinic_master_data';
 
             console.log("Cloud sync: Syncing data to Firestore...");
-            // Push the entire data object to Firestore
-            // Note: firestore has a 1MB limit per document. If data grows too large, 
-            // you'll need to split this into multiple documents.
             await db.collection('app_data').doc(docId).set({
                 ...this.data,
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             });
-            console.log("Cloud sync: Success.");
+
+            this.lastLatency = Math.round(performance.now() - startTime);
+            this.cloudStatus = 'online';
+            console.log(`Cloud sync: Success (${this.lastLatency}ms).`);
         } catch (error) {
+            this.cloudStatus = 'error';
             console.error("Cloud sync failed:", error);
+
+            // Helpful alerts for common issues
+            if (error.code === 'permission-denied') {
+                alert("خطأ في المزامنة (Permission Denied): يرجى التأكد من تفعيل Firestore Rules على وضع Test Mode في لوحة تحكم Firebase.");
+            } else if (error.code === 'failed-precondition') {
+                alert("خطأ في المزامنة: البيانات كبيرة جداً أو تحتاج لفهرسة.");
+            }
         }
+        this.updateSyncUI();
+    }
+
+    updateSyncUI() {
+        // Dispatch event for UI components to listen to
+        const event = new CustomEvent('syncStatusChanged', {
+            detail: {
+                status: this.cloudStatus,
+                latency: this.lastLatency
+            }
+        });
+        window.dispatchEvent(event);
     }
 
     /**
