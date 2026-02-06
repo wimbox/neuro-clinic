@@ -14,7 +14,10 @@ class SyncManager {
         this.DB_KEY = 'neuro_clinic_data_v1';
         // Force Reload Logic Fix
         this.data = this.loadLocal();
-        this.cloudStatus = 'offline'; // 'offline', 'syncing', 'online', 'error'
+        this.isNewSession = !localStorage.getItem(this.DB_KEY); // Detect fresh install
+        this.isPullDone = !this.isNewSession; // If not new, we can push. If new, MUST pull first.
+
+        this.cloudStatus = 'offline';
         this.lastLatency = 0;
         this.syncTimeout = null;
 
@@ -35,9 +38,9 @@ class SyncManager {
             }
         });
 
-        // 2. Cross-Device Sync: Initialize Firestore listener after a small delay
-        // to ensure Firebase SDK and 'db' are ready.
-        setTimeout(() => this.startCloudObserver(), 1000);
+        // 2. Cross-Device Sync: Initialize Firestore listener
+        // Reduced delay to 300ms to catch cloud data before any accidental local saves
+        setTimeout(() => this.startCloudObserver(), 300);
     }
 
     notifyDataChanged() {
@@ -447,17 +450,25 @@ class SyncManager {
                 const lastLocalUpdateTime = new Date(this.data.settings?.lastLocalUpdate || 0).getTime();
 
                 // Logic: Only pull if cloud is newer than our last session's sync 
-                // AND we don't have unsynced local changes that are EVEN NEWER than the cloud data.
-                // This prevents the cloud from overwriting a change you JUST made but haven't uploaded yet.
-                if (cloudTime > lastSyncTime && cloudTime > lastLocalUpdateTime) {
+                // OR if this is a fresh install (isNewSession)
+                if (this.isNewSession || (cloudTime > lastSyncTime && cloudTime > lastLocalUpdateTime)) {
                     console.log("Cloud Observer: Newer data found in cloud. Merging...");
                     this.data = cloudData;
                     // Persist locally
                     localStorage.setItem(this.DB_KEY, JSON.stringify(this.data));
+                    this.isNewSession = false; // Fresh start over
                     this.notifyDataChanged();
                 } else {
                     console.log("Cloud Observer: Cloud update ignored (we have newer or equal local data).");
                 }
+
+                // Mark pull as done to unlock pushes
+                this.isPullDone = true;
+            } else {
+                // Document doesn't exist in cloud yet
+                console.log("Cloud Observer: Cloud document is empty.");
+                this.isPullDone = true;
+                this.isNewSession = false;
             }
         }, (error) => {
             console.error("Cloud Observer error:", error);
@@ -719,6 +730,16 @@ class SyncManager {
         }
 
         const startTime = performance.now();
+
+        // --- Critical Safety Check ---
+        if (!this.isPullDone) {
+            console.warn("Cloud sync: Push blocked. Waiting for initial cloud pull to prevent data wipe.");
+            // Retry in 2 seconds
+            if (this.syncTimeout) clearTimeout(this.syncTimeout);
+            this.syncTimeout = setTimeout(() => this.triggerCloudSync(), 2000);
+            return false;
+        }
+
         this.cloudStatus = 'syncing';
         this.updateSyncUI();
 
