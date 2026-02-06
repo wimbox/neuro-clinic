@@ -237,15 +237,21 @@
         <div class="logo">
             <h1><i class="fa-solid fa-brain"></i> Neuro-Clinic</h1>
         </div>
-        <div class="clock" id="clock">00:00 PM</div>
+        <div style="display: flex; align-items: center; gap: 20px;">
+            <div class="clock" id="clock">00:00 PM</div>
+            <button onclick="window.close()"
+                style="background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #ef4444; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-family: 'Tajawal'; font-weight: 700;">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i> خروج
+            </button>
+        </div>
     </header>
 
     <div class="container">
         <!-- Current Patient -->
         <div class="current-patient-card" id="current-patient-area">
             <div class="status-badge">الآن في الكشف</div>
-            <div class="patient-number" id="current-number">---</div>
-            <div class="patient-name" id="current-name">لا يوجد مريض الآن</div>
+            <div class="patient-number" id="current-number" style="font-size: 10rem; color: var(--accent);">---</div>
+            <div class="patient-name" id="current-name" style="font-size: 2.5rem; opacity: 0.7;">بانتظار المريض</div>
             <div style="font-size: 1.5rem; color: #fff; margin-top: 30px; opacity: 0.8;">الرجاء الهدوء والانتظار</div>
         </div>
 
@@ -253,7 +259,7 @@
         <div class="queue-list-container">
             <div class="queue-header">
                 <span>القادمون</span>
-                <span style="font-size: 1rem; color: #64748b;">Waiting List</span>
+                <span style="font-size: 1rem; color: #64748b;">Privacy Mode Active</span>
             </div>
             <div class="queue-items" id="queue-list">
                 <!-- Items -->
@@ -308,8 +314,10 @@
             const card = document.getElementById('current-patient-area');
 
             if (current) {
-                nameEl.innerText = current.patientName;
-                numEl.innerText = '#' + (current.patientCode || '00');
+                // Show Code big, Name hidden
+                const codeStr = (current.patientCode && current.patientCode !== 'undefined') ? current.patientCode : '101';
+                numEl.innerText = `#${codeStr}#`;
+                nameEl.innerText = 'الرجاء التوجه لغرفة الكشف';
 
                 // Play Sound if new patient
                 if (lastCurrentId !== current.id) {
@@ -319,8 +327,8 @@
                     lastCurrentId = current.id;
                 }
             } else {
-                nameEl.innerText = 'استراحة';
-                numEl.innerText = '---';
+                numEl.innerText = 'جاهز';
+                nameEl.innerText = 'بانتظار المريض القادم';
                 lastCurrentId = null;
             }
 
@@ -330,12 +338,14 @@
             if (waiting.length === 0) {
                 listEl.innerHTML = '<div style="text-align: center; color: #64748b; font-size: 1.5rem; margin-top: 50px;">القائمة فارغة الآن</div>';
             } else {
-                listEl.innerHTML = waiting.slice(0, 6).map((item, index) => `
+                listEl.innerHTML = waiting.slice(0, 6).map((item, index) => {
+                    const codeLabel = (item.patientCode && item.patientCode !== 'undefined') ? `#${item.patientCode}#` : '#...#';
+                    return `
                     <div class="queue-item ${index === 0 ? 'next' : ''}">
-                        <div class="q-name">${item.patientName}</div>
-                        <div class="q-code">#${item.patientCode || '00'}</div>
+                        <div class="q-name" style="color: var(--accent);">${codeLabel}</div>
+                        <div class="q-code">بانتظار الدور</div>
                     </div>
-                `).join('');
+                `}).join('');
             }
         };
 

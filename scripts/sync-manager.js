@@ -5,7 +5,7 @@
 
 // --- إعدادات النظام (يمكنك التعديل من هنا مباشرة) ---
 const GLOBAL_CONFIG = {
-    STARTING_CODE: 0,
+    STARTING_CODE: 100,
     CLINIC_NAME: 'الاسكندرية'
 };
 // -----------------------------------------------
@@ -124,8 +124,8 @@ class SyncManager {
                 localStorage.setItem(this.DB_KEY, JSON.stringify(parsed));
             }
 
-            if (parsed.settings.lastPatientCode === undefined) {
-                parsed.settings.lastPatientCode = GLOBAL_CONFIG.STARTING_CODE;
+            if (parsed.settings.lastPatientCode === undefined || parsed.settings.lastPatientCode < 100) {
+                parsed.settings.lastPatientCode = 100;
             }
 
             // --- Migration for New Features (Users & Logs) ---

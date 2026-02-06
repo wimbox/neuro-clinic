@@ -807,10 +807,17 @@ class DashboardUI {
         const transactions = syncManager.getTransactionsByClinic();
 
         const now = new Date();
-        const todayStr = now.toISOString().split('T')[0];
+        const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
         const currentMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 
-        const apptsToday = appointments.filter(a => a.datetime && a.datetime.startsWith(todayStr)).length;
+        const apptsToday = appointments.filter(a => {
+            if (!a.datetime) return false;
+            const appDateStr = a.datetime.split('T')[0].replace(/\//g, '-');
+            // Normalize parts to ensure leading zeros don't break comparison
+            const [y, m, d] = appDateStr.split('-');
+            const normalizedAppDate = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+            return normalizedAppDate === todayStr;
+        }).length;
 
         // Filter transactions for the current month correctly
         const monthlyTransactions = transactions.filter(t => {
@@ -847,20 +854,27 @@ class DashboardUI {
 
     renderTodayAppointments() {
         const appointments = syncManager.getAppointmentsByClinic();
-        const todayStr = new Date().toISOString().split('T')[0];
-        const todayList = appointments.filter(a => a.datetime && a.datetime.startsWith(todayStr));
+        const now = new Date();
+        const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        const todayList = appointments.filter(a => {
+            if (!a.datetime) return false;
+            const appDateStr = a.datetime.split('T')[0].replace(/\//g, '-');
+            const [y, m, d] = appDateStr.split('-');
+            const normalizedAppDate = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+            return normalizedAppDate === todayStr;
+        });
 
         if (!this.tables.todayAppointments) return;
 
         this.tables.todayAppointments.innerHTML = todayList.map(app => {
-            let statusBadge = '';
-            if (app.status === 'paid') {
-                statusBadge = '<span class="status-badge" style="background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid #10b981;">مدفوع</span>';
-            } else if (app.status === 'partial') {
-                statusBadge = `<span class="status-badge" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid #f59e0b;">جزئي ${app.cost - app.paid}</span>`;
-            } else {
-                statusBadge = '<span class="status-badge" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid #ef4444;">لم يسدد</span>';
-            }
+            const remaining = parseFloat(app.cost || 0) - parseFloat(app.paid || 0);
+            let statusHTML = `
+                <div style="font-size: 0.85rem; line-height: 1.4;">
+                    <div style="color: #94a3b8;">إجمالي: ${app.cost}</div>
+                    <div style="color: #10b981;">مدفوع: ${app.paid}</div>
+                    ${remaining > 0 ? `<div style="color: #ef4444; font-weight: 700;">باقي: ${remaining}</div>` : '<div style="color: #10b981; font-weight: 700;">خالص</div>'}
+                </div>
+            `;
 
             return `
             <tr onclick="window.patientFileUI.open('${app.patientId}')" style="cursor:pointer">
@@ -874,7 +888,7 @@ class DashboardUI {
                 </td>
                 <td style="color: var(--accent-glow); font-weight: 600;">${app.datetime.split('T')[1]}</td>
                 <td>${app.service}</td>
-                <td>${statusBadge}</td>
+                <td>${statusHTML}</td>
                 <td>
                     <button class="btn-edit-tool" onclick="event.stopPropagation(); window.dashboardUI.editAppointment('${app.id}')" title="تعديل" style="margin-left:5px;">
                         <i class="fa-solid fa-pen"></i>
@@ -900,14 +914,14 @@ class DashboardUI {
         const sortedList = appointments.slice().sort((a, b) => new Date(b.datetime) - new Date(a.datetime));
 
         this.tables.allAppointments.innerHTML = sortedList.map(app => {
-            let statusBadge = '';
-            if (app.status === 'paid') {
-                statusBadge = '<span class="status-badge" style="background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid #10b981;">مدفوع</span>';
-            } else if (app.status === 'partial') {
-                statusBadge = `<span class="status-badge" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid #f59e0b;">جزئي ${app.cost - app.paid}</span>`;
-            } else {
-                statusBadge = '<span class="status-badge" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid #ef4444;">لم يسدد</span>';
-            }
+            const remaining = parseFloat(app.cost || 0) - parseFloat(app.paid || 0);
+            let statusHTML = `
+                <div style="font-size: 0.85rem; line-height: 1.4;">
+                    <div style="color: #94a3b8;">إجمالي: ${app.cost}</div>
+                    <div style="color: #10b981;">مدفوع: ${app.paid}</div>
+                    ${remaining > 0 ? `<div style="color: #ef4444; font-weight: 700;">باقي: ${remaining}</div>` : '<div style="color: #10b981; font-weight: 700;">خالص</div>'}
+                </div>
+            `;
 
             return `
             <tr onclick="window.patientFileUI.open('${app.patientId}')" style="cursor:pointer">
@@ -921,7 +935,7 @@ class DashboardUI {
                 </td>
                 <td style="color: var(--accent-glow); font-weight: 600;">${new Date(app.datetime).toLocaleString('ar-EG')}</td>
                 <td>${app.service}</td>
-                <td>${statusBadge}</td>
+                <td>${statusHTML}</td>
                 <td>
                     <button class="btn-edit-tool" onclick="event.stopPropagation(); window.dashboardUI.editAppointment('${app.id}')" title="تعديل" style="margin-left:5px;">
                         <i class="fa-solid fa-pen"></i>
@@ -954,7 +968,7 @@ class DashboardUI {
 
         patientTableBody.innerHTML = patients.map(p => `
             <tr>
-                <td style="color: var(--accent-blue); font-weight: 800; font-family: 'Inter';">#${p.patientCode || '---'}</td>
+                <td style="color: var(--accent-blue); font-weight: 800; font-family: 'Inter';">#${p.patientCode || '10x'}#</td>
                 <td>
                     <div style="display: flex; align-items: center; gap: 12px;">
                         <div style="width: 35px; height: 35px; border-radius: 10px; background: #0f172a; border: 1px solid var(--accent-blue); display:flex; align-items:center; justify-content:center; color: var(--accent-blue); font-weight: 800; box-shadow: 0 0 15px rgba(0, 234, 255, 0.1);">
@@ -1209,13 +1223,15 @@ class DashboardUI {
     handleQueueAction(appId, patientId, action, patientName, queueId) {
         if (!window.queueManager) return;
 
-        // Find patient code if needed
-        const patient = syncManager.getPatients().find(p => p.id === patientId);
-        const code = patient ? patient.patientCode : '00';
+        // Find patient data to ensure we have Name and Code
+        const patient = syncManager.data.patients.find(p => p.id === patientId);
+        const code = patient ? (patient.patientCode || '101') : '101';
+        const name = patient ? patient.name : (patientName || 'مريض');
 
         if (action === 'check-in' || !action) { // Default to check-in if not specified
-            window.queueManager.checkIn(appId, patientName, code);
+            window.queueManager.checkIn(appId, name, code);
             window.soundManager.playSuccess();
+            window.showNeuroToast('تم إضافة المريض لقائمة الانتظار', 'success');
         } else if (action === 'call') {
             window.queueManager.updateStatus(queueId, 'in-progress');
             window.soundManager.playBuzz(); // Attention sound
@@ -1225,6 +1241,7 @@ class DashboardUI {
         }
 
         this.renderTodayAppointments();
+        if (this.tables.allAppointments) this.renderAllAppointments();
     }
 
     addTx(type, amount, description, beneficiary) {
