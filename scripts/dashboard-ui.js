@@ -1678,13 +1678,32 @@ class DashboardUI {
                     </div>
                     
                     ${isAdmin ? `
-                    <div style="margin-top: 20px; padding: 20px; border: 1px dashed rgba(255,255,255,0.2); border-radius: 15px; text-align: center;">
-                        <h4 style="color: #f59e0b; margin-bottom: 15px;">استعادة نسخة احتياطية</h4>
-                        <input type="file" id="restore-backup-input" accept=".json" style="display: none;" onchange="window.dashboardUI.handleRestoreBackup(event)">
-                        <button onclick="document.getElementById('restore-backup-input').click()" class="btn-neuro" style="background: #f59e0b; border-color: #f59e0b; color: #000; margin: 0 auto;">
-                            <i class="fa-solid fa-upload"></i> رفع واستعادة البيانات
+                    <div style="margin-top: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 25px;">
+                        <div style="padding: 20px; border: 1px dashed rgba(245, 158, 11, 0.3); border-radius: 15px; text-align: center; background: rgba(245, 158, 11, 0.05);">
+                            <h4 style="color: #f59e0b; margin-bottom: 15px;">استعادة نسخة احتياطية (JSON)</h4>
+                            <input type="file" id="restore-backup-input" accept=".json" style="display: none;" onchange="window.dashboardUI.handleRestoreBackup(event)">
+                            <button onclick="document.getElementById('restore-backup-input').click()" class="btn-neuro" style="background: #f59e0b; border-color: #f59e0b; color: #000; margin: 0 auto; width: 100%;">
+                                <i class="fa-solid fa-upload"></i> رفع واستعادة JSON
+                            </button>
+                            <p style="color: #ef4444; font-size: 0.7rem; margin-top: 10px;">⚠️ سيتم مسح واستبدال كافة البيانات</p>
+                        </div>
+
+                        <div style="padding: 20px; border: 1px dashed rgba(16, 185, 129, 0.3); border-radius: 15px; text-align: center; background: rgba(16, 185, 129, 0.05);">
+                            <h4 style="color: #10b981; margin-bottom: 15px;">استيراد مرضى من (CSV)</h4>
+                            <input type="file" id="restore-csv-input" accept=".csv" style="display: none;" onchange="window.dashboardUI.handleRestoreCSV(event)">
+                            <button onclick="document.getElementById('restore-csv-input').click()" class="btn-neuro" style="background: #10b981; border-color: #10b981; color: #fff; margin: 0 auto; width: 100%;">
+                                <i class="fa-solid fa-file-import"></i> استيراد ملف CSV
+                            </button>
+                            <p style="color: #cbd5e1; font-size: 0.7rem; margin-top: 10px;">يتم إضافة المرضى الجدد فقط لسجلك الحالي</p>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 20px; padding: 20px; border: 1px solid rgba(0, 234, 255, 0.2); border-radius: 15px; background: rgba(0, 234, 255, 0.05); text-align: center;">
+                        <h4 style="color: #00eaff; margin-bottom: 10px;">المزامنة اليدوية مع السحابة</h4>
+                        <p style="color: #94a3b8; font-size: 0.8rem; margin-bottom: 15px;">استخدم هذا الزر إذا كنت تشك بأن البيانات لم ترفع تلقائياً للسحاب.</p>
+                        <button onclick="window.dashboardUI.forceSync()" class="btn-neuro" style="background: #00eaff; border-color: #00eaff; color: #000; margin: 0 auto;">
+                            <i class="fa-solid fa-cloud-arrow-up"></i> رفع البيانات للسحاب الآن
                         </button>
-                        <p style="color: #ef4444; font-size: 0.75rem; margin-top: 10px;">⚠️ تنبيه: استعادة النسخة سيؤدي لمسح البيانات الحالية واستبدالها بالكامل.</p>
                     </div>
                     ` : ''}
                 </div>
@@ -1789,31 +1808,95 @@ class DashboardUI {
         const reader = new FileReader();
         reader.onload = (e) => {
             const content = e.target.result;
-            showNeuroModal('تأكيد الاستعادة', 'هل أنت متأكد؟ سيتم حذف جميع البيانات الحالية واستبدالها بمحتوى الملف المرفوع.', async () => {
+            showNeuroModal('تأكيد الاستعادة الكاملة (JSON)', 'هل أنت متأكد؟ سيتم حذف جميع البيانات الحالية واستبدالها بمحتوى الملف المرفوع. هذه العملية لا يمكن التراجع عنها.', async () => {
                 if (syncManager.restoreBackup(content)) {
                     window.soundManager?.playSuccess();
 
                     // Force immediate cloud sync and wait for it
                     if (window.syncManager && typeof db !== 'undefined') {
-                        // Show "Syncing..." message inside the modal content
                         const statusMsg = document.createElement('div');
-                        statusMsg.innerHTML = '<div style="text-align:center; padding:15px; color:#00eaff;"><i class="fa-solid fa-sync fa-spin"></i> جاري مزامنة البيانات المستعادة مع السحابة... يرجى الانتظار</div>';
+                        statusMsg.innerHTML = '<div style="text-align:center; padding:15px; color:#00eaff;"><i class="fa-solid fa-sync fa-spin"></i> جاري رفع البيانات المستعادة للسحابة... يرجى الانتظار</div>';
                         document.querySelector('.neuro-modal-msg').appendChild(statusMsg);
 
-                        await window.syncManager.triggerCloudSync();
+                        const syncSuccess = await window.syncManager.triggerCloudSync();
+                        if (!syncSuccess) {
+                            alert('⚠️ تم تحديث البيانات محلياً ولكن فشل الرفع للسحاب. سيحاول النظام المزامنة لاحقاً عند توفر اتصال.');
+                        }
                     }
 
-                    alert('تم استعادة البيانات بنجاح ومزامنتها! سيتم إعادة تحميل الصفحة الآن.');
+                    alert('تم استعادة البيانات بنجاح! سيتم إعادة تحميل التطبيق الآن.');
                     window.location.reload();
                     return true;
                 } else {
-                    alert('فشل استعادة البيانات. يرجى التأكد من صحة الملف.');
+                    alert('خطأ: الملف المرفوع ليس نسخة احتياطية صحيحة.');
                     window.soundManager?.playError();
                     return false;
                 }
             });
         };
         reader.readAsText(file);
+        event.target.value = ''; // Reset input
+    }
+
+    handleRestoreCSV(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const content = e.target.result;
+            showNeuroModal('استيراد مرضى (CSV)', 'سيقوم النظام بقراءة ملف CSV وإضافة المرضى غير الموجودين مسبقاً إلى سجلك الحالي. هل تود الاستمرار؟', async () => {
+                const result = syncManager.restoreFromCSV(content);
+                if (result && result.success) {
+                    window.soundManager?.playSuccess();
+
+                    if (window.syncManager && typeof db !== 'undefined') {
+                        const statusMsg = document.createElement('div');
+                        statusMsg.innerHTML = `<div style="text-align:center; padding:15px; color:#00eaff;"><i class="fa-solid fa-sync fa-spin"></i> تم استيراد ${result.count} مريض.. جاري المزامنة مع السحاب...</div>`;
+                        document.querySelector('.neuro-modal-msg').appendChild(statusMsg);
+                        await window.syncManager.triggerCloudSync();
+                    }
+
+                    alert(`تم استيراد ${result.count} مريض بنجاح!`);
+                    this.renderPatientsManagement();
+                    this.updateStats();
+                    return true;
+                } else {
+                    alert('فشل استيراد الملف. تأكد أن الملف بصيغة CSV صحيحة ومطابقة لتنسيق النظام.');
+                    window.soundManager?.playError();
+                    return false;
+                }
+            });
+        };
+        reader.readAsText(file);
+        event.target.value = ''; // Reset input
+    }
+
+    async forceSync() {
+        if (!window.syncManager) return;
+
+        const btn = event.currentTarget;
+        const originalHTML = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-sync fa-spin"></i> جاري الرفع...';
+
+        const success = await window.syncManager.triggerCloudSync();
+
+        if (success) {
+            window.soundManager?.playSuccess();
+            btn.style.background = '#10b981';
+            btn.innerHTML = '<i class="fa-solid fa-check"></i> تم الرفع بنجاح';
+        } else {
+            window.soundManager?.playError();
+            btn.style.background = '#ef4444';
+            btn.innerHTML = '<i class="fa-solid fa-xmark"></i> فشل الرفع';
+        }
+
+        setTimeout(() => {
+            btn.disabled = false;
+            btn.style.background = '';
+            btn.innerHTML = originalHTML;
+        }, 3000);
     }
 }
 

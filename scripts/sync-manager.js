@@ -295,6 +295,11 @@ class SyncManager {
             if (parsed.patients && parsed.users && parsed.settings) {
                 // 1. Restore Dashboard Data
                 const { prescriptionTemplates, ...dashboardData } = parsed;
+
+                // Ensure lastLocalUpdate is set to current so cloud pull doesn't overwrite it immediately
+                if (!dashboardData.settings) dashboardData.settings = {};
+                dashboardData.settings.lastLocalUpdate = new Date().toISOString();
+
                 this.data = dashboardData;
                 this.saveLocal();
 
@@ -308,6 +313,71 @@ class SyncManager {
             return false;
         } catch (e) {
             console.error("Restore failed:", e);
+            return false;
+        }
+    }
+
+    restoreFromCSV(csvText) {
+        try {
+            // Remove BOM if present
+            const cleanCSV = csvText.replace(/^\uFEFF/, '').trim();
+            const lines = cleanCSV.split(/\r?\n/);
+            if (lines.length < 2) return false;
+
+            const patients = [];
+
+            // Expected columns based on export: الكود,الاسم,السن,الهاتف,النوع,تاريخ التسجيل
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line) continue;
+
+                // Simple but effective CSV split (handles quotes)
+                const parts = [];
+                let current = '';
+                let inQuotes = false;
+                for (let char of line) {
+                    if (char === '"') inQuotes = !inQuotes;
+                    else if (char === ',' && !inQuotes) {
+                        parts.push(current.trim());
+                        current = '';
+                    } else {
+                        current += char;
+                    }
+                }
+                parts.push(current.trim());
+
+                if (parts.length < 2) continue;
+
+                patients.push({
+                    id: crypto.randomUUID(),
+                    patientCode: parseInt(parts[0]) || 0,
+                    name: parts[1] || 'غير معروف',
+                    age: parts[2] || '',
+                    phone: parts[3] || '',
+                    gender: parts[4] || 'ذكر',
+                    visits: [],
+                    createdAt: parts[5] ? new Date(parts[5]).toISOString() : new Date().toISOString(),
+                    clinicId: this.data.settings.activeClinicId || 'clinic-default'
+                });
+            }
+
+            if (patients.length > 0) {
+                // Merge patients (avoid duplicates by code)
+                let addedCount = 0;
+                patients.forEach(newP => {
+                    const exists = this.data.patients.find(p => p.patientCode === newP.patientCode);
+                    if (!exists) {
+                        this.data.patients.push(newP);
+                        addedCount++;
+                    }
+                });
+
+                this.saveLocal();
+                return { success: true, count: addedCount };
+            }
+            return false;
+        } catch (e) {
+            console.error("CSV Import failed:", e);
             return false;
         }
     }
@@ -600,7 +670,7 @@ class SyncManager {
             console.log("Cloud sync: Firebase not initialized or configured.");
             this.cloudStatus = 'offline';
             this.updateSyncUI();
-            return;
+            return false;
         }
 
         const startTime = performance.now();
@@ -608,33 +678,49 @@ class SyncManager {
         this.updateSyncUI();
 
         try {
-            // Get current clinic ID for document partitioning (optional but better)
             const docId = 'clinic_master_data';
-
             console.log("Cloud sync: Syncing data to Firestore...");
+
             // Update lastSync timestamp locally before uploading
             this.data.settings.lastSync = new Date().toISOString();
 
+            // CLONE data and clean it for Firestore (no undefined values)
+            const cleanData = JSON.parse(JSON.stringify(this.data));
+
             await db.collection('app_data').doc(docId).set({
-                ...this.data,
+                ...cleanData,
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             });
+
+            // Very important: Update local lastSync to current time AFTER set
+            this.data.settings.lastSync = new Date().toISOString();
+            localStorage.setItem(this.DB_KEY, JSON.stringify(this.data));
 
             this.lastLatency = Math.round(performance.now() - startTime);
             this.cloudStatus = 'online';
             console.log(`Cloud sync: Success (${this.lastLatency}ms).`);
+            this.updateSyncUI();
+            return true;
         } catch (error) {
             this.cloudStatus = 'error';
             console.error("Cloud sync failed:", error);
 
-            // Helpful alerts for common issues
+            let errorMsg = "فشل في مزامنة البيانات مع السحابة.";
             if (error.code === 'permission-denied') {
-                alert("خطأ في المزامنة (Permission Denied): يرجى التأكد من تفعيل Firestore Rules على وضع Test Mode في لوحة تحكم Firebase.");
+                errorMsg = "خطأ في الصلاحيات (Permission Denied): تأكد من إعدادات Firebase.";
             } else if (error.code === 'failed-precondition') {
-                alert("خطأ في المزامنة: البيانات كبيرة جداً أو تحتاج لفهرسة.");
+                errorMsg = "خطأ: حجم البيانات كبير جداً أو تحتاج لفهرسة في Firebase.";
+            } else if (error.message.includes('offline')) {
+                errorMsg = "أنت غير متصل بالإنترنت حالياً. سيتم الرفع تلقائياً عند عودة الاتصال.";
             }
+
+            // Report the error to UI
+            const event = new CustomEvent('syncError', { detail: { message: errorMsg, raw: error } });
+            window.dispatchEvent(event);
+
+            this.updateSyncUI();
+            return false;
         }
-        this.updateSyncUI();
     }
 
     updateSyncUI() {

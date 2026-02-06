@@ -166,8 +166,7 @@ class AuthManager {
                             appearance: none;
                             -webkit-appearance: none;
                         " onmouseover="this.style.borderColor='#00eaff'; this.style.boxShadow='0 0 25px rgba(0, 234, 255, 0.25)'; this.style.background='rgba(0, 234, 255, 0.1)'" 
-                           onmouseout="this.style.borderColor='rgba(0, 234, 255, 0.3)'; this.style.boxShadow='0 0 20px rgba(0, 234, 255, 0.05)'; this.style.background='rgba(15, 23, 42, 0.8)'">
-                           onmouseout="this.style.borderColor='rgba(0, 234, 255, 0.4)'; this.style.boxShadow='0 0 15px rgba(0, 234, 255, 0.1)'">
+                           onmouseout="this.style.borderColor='rgba(0, 234, 255, 0.4)'; this.style.boxShadow='0 0 15px rgba(0, 234, 255, 0.1)'; this.style.background='rgba(15, 23, 42, 0.8)'">
                         </select>
                         <i class="fa-solid fa-chevron-down" style="position: absolute; left: 12%; top: 50%; transform: translateY(-50%); color: #00eaff; font-size: 0.8rem; pointer-events: none; opacity: 0.7;"></i>
                     </div>
