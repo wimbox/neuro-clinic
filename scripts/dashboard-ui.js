@@ -1642,13 +1642,47 @@ class DashboardUI {
                     <div id="users-list-container"></div>
                 </div>
 
+                <!-- Backup & Security Section -->
+                <div style="background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 30px; margin-top: 20px;">
+                    <h2 style="color: #fff; font-size: 1.5rem; margin-bottom: 25px;">
+                        <i class="fa-solid fa-database"></i> النسخ الاحتياطي والأمان
+                    </h2>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div style="background: rgba(0,0,0,0.2); padding: 20px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.05);">
+                            <h4 style="color: #00eaff; margin-bottom: 10px;">نسخة كاملة (JSON)</h4>
+                            <p style="color: #94a3b8; font-size: 0.85rem; margin-bottom: 15px;">يحتوي على كافة المرضى، المواعيد، الحسابات والإعدادات.</p>
+                            <button onclick="window.dashboardUI.exportFullBackup()" class="btn-neuro" style="width: 100%; background: rgba(0, 234, 255, 0.1); color: #00eaff;">
+                                <i class="fa-solid fa-download"></i> تحميل نسخة شاملة
+                            </button>
+                        </div>
+                        <div style="background: rgba(0,0,0,0.2); padding: 20px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.05);">
+                            <h4 style="color: #10b981; margin-bottom: 10px;">سجل المرضى (CSV)</h4>
+                            <p style="color: #94a3b8; font-size: 0.85rem; margin-bottom: 15px;">تصدير قائمة المرضى كملف Excel لسهولة القراءة والبحث.</p>
+                            <button onclick="window.dashboardUI.exportPatientsCSV()" class="btn-neuro" style="width: 100%; background: rgba(16, 185, 129, 0.1); color: #10b981; border-color: #10b981;">
+                                <i class="fa-solid fa-file-csv"></i> تصدير للميكروسوفت إكسيل
+                            </button>
+                        </div>
+                    </div>
+                    
+                    ${isAdmin ? `
+                    <div style="margin-top: 20px; padding: 20px; border: 1px dashed rgba(255,255,255,0.2); border-radius: 15px; text-align: center;">
+                        <h4 style="color: #f59e0b; margin-bottom: 15px;">استعادة نسخة احتياطية</h4>
+                        <input type="file" id="restore-backup-input" accept=".json" style="display: none;" onchange="window.dashboardUI.handleRestoreBackup(event)">
+                        <button onclick="document.getElementById('restore-backup-input').click()" class="btn-neuro" style="background: #f59e0b; border-color: #f59e0b; color: #000; margin: 0 auto;">
+                            <i class="fa-solid fa-upload"></i> رفع واستعادة البيانات
+                        </button>
+                        <p style="color: #ef4444; font-size: 0.75rem; margin-top: 10px;">⚠️ تنبيه: استعادة النسخة سيؤدي لمسح البيانات الحالية واستبدالها بالكامل.</p>
+                    </div>
+                    ` : ''}
+                </div>
+
                 <!-- System Info -->
                 <div style="background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 30px; margin-top: 20px;">
                     <h3 style="color: #fff; margin-bottom: 15px;">
                         <i class="fa-solid fa-info-circle"></i> معلومات النظام
                     </h3>
                     <div style="color: #94a3b8; line-height: 1.8;">
-                        <p><strong>الإصدار:</strong> 2.0.0 (Multi-Clinic Edition)</p>
+                        <p><strong>الإصدار:</strong> 2.1.0 (Cloud Sync Edition)</p>
                         <p><strong>آخر تحديث:</strong> ${new Date().toLocaleDateString('ar-EG')}</p>
                         <p><strong>المستخدم الحالي:</strong> ${currentUser?.name || 'غير معروف'}</p>
                         <p><strong>الصلاحية:</strong> ${this.getRoleLabel(currentUser?.role)}</p>
@@ -1659,6 +1693,101 @@ class DashboardUI {
 
         // Render users list
         this.renderUsers();
+    }
+
+    // --- Backup & Export Methods ---
+    async exportFullBackup() {
+        const data = syncManager.getBackupJSON();
+
+        // Smart "Save As" Approach
+        if ('showSaveFilePicker' in window) {
+            try {
+                const handle = await window.showSaveFilePicker({
+                    suggestedName: `neuro_clinic_backup_${new Date().toISOString().split('T')[0]}.json`,
+                    types: [{
+                        description: 'JSON Backup File',
+                        accept: { 'application/json': ['.json'] },
+                    }],
+                });
+                const writable = await handle.createWritable();
+                await writable.write(data);
+                await writable.close();
+                window.soundManager?.playSuccess();
+                return;
+            } catch (err) {
+                if (err.name === 'AbortError') return;
+                console.warn("Smart Save failed, falling back to legacy download:", err);
+            }
+        }
+
+        // Legacy Fallback
+        const blob = new Blob([data], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `neuro_clinic_backup_${new Date().toISOString().split('T')[0]}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        window.soundManager?.playSuccess();
+    }
+
+    async exportPatientsCSV() {
+        const csv = syncManager.exportPatientsCSV();
+        if (!csv) {
+            alert('لا توجد بيانات مرضى للتصدير!');
+            return;
+        }
+
+        // Smart "Save As" Approach
+        if ('showSaveFilePicker' in window) {
+            try {
+                const handle = await window.showSaveFilePicker({
+                    suggestedName: `patients_list_${new Date().toISOString().split('T')[0]}.csv`,
+                    types: [{
+                        description: 'CSV Spreadsheet',
+                        accept: { 'text/csv': ['.csv'] },
+                    }],
+                });
+                const writable = await handle.createWritable();
+                await writable.write(csv);
+                await writable.close();
+                window.soundManager?.playSuccess();
+                return;
+            } catch (err) {
+                if (err.name === 'AbortError') return;
+                console.warn("Smart Save failed, falling back to legacy download:", err);
+            }
+        }
+
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `patients_list_${new Date().toISOString().split('T')[0]}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+        window.soundManager?.playSuccess();
+    }
+
+    handleRestoreBackup(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const content = e.target.result;
+            showNeuroModal('تأكيد الاستعادة', 'هل أنت متأكد؟ سيتم حذف جميع البيانات الحالية واستبدالها بمحتوى الملف المرفوع.', () => {
+                if (syncManager.restoreBackup(content)) {
+                    window.soundManager?.playSuccess();
+                    alert('تم استعادة البيانات بنجاح! سيتم إعادة تحميل الصفحة الآن.');
+                    window.location.reload();
+                } else {
+                    alert('فشل استعادة البيانات. يرجى التأكد من صحة الملف.');
+                    window.soundManager?.playError();
+                }
+            });
+        };
+        reader.readAsText(file);
     }
 }
 

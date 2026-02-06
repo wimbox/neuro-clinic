@@ -243,20 +243,43 @@ class SyncManager {
     }
 
     getBackupJSON() {
-        return JSON.stringify(this.data, null, 2);
+        // Create a deep copy to avoid modifying runtime data
+        const backupData = JSON.parse(JSON.stringify(this.data));
+
+        // Include Prescription Templates from localStorage
+        try {
+            const templates = localStorage.getItem('mediscript_templates');
+            if (templates) {
+                backupData.prescriptionTemplates = JSON.parse(templates);
+            }
+        } catch (e) {
+            console.warn("Could not include templates in backup:", e);
+        }
+
+        return JSON.stringify(backupData, null, 2);
     }
 
     restoreBackup(jsonString) {
         try {
             const parsed = JSON.parse(jsonString);
-            // Basic Validation
+
+            // Basic Validation - must have at least patients/users/settings
             if (parsed.patients && parsed.users && parsed.settings) {
-                this.data = parsed;
+                // 1. Restore Dashboard Data
+                const { prescriptionTemplates, ...dashboardData } = parsed;
+                this.data = dashboardData;
                 this.saveLocal();
+
+                // 2. Restore Prescription Templates if they exist in backup
+                if (prescriptionTemplates) {
+                    localStorage.setItem('mediscript_templates', JSON.stringify(prescriptionTemplates));
+                }
+
                 return true;
             }
             return false;
         } catch (e) {
+            console.error("Restore failed:", e);
             return false;
         }
     }

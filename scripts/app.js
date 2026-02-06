@@ -980,18 +980,43 @@ class App {
 
             // --- EXPORT Logic ---
             if (doExportBtn) {
-                doExportBtn.addEventListener('click', () => {
+                doExportBtn.addEventListener('click', async () => {
                     const data = localStorage.getItem('mediscript_templates') || '[]';
 
                     const now = new Date();
                     const timestamp = `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}_${now.getHours()}-${now.getMinutes()}`;
+                    const suggestedName = `Prescriptions_Templates_Backup_${timestamp}.json`;
 
+                    // Smart "Save As" Approach
+                    if ('showSaveFilePicker' in window) {
+                        try {
+                            const handle = await window.showSaveFilePicker({
+                                suggestedName: suggestedName,
+                                types: [{
+                                    description: 'JSON Backup',
+                                    accept: { 'application/json': ['.json'] }
+                                }]
+                            });
+                            const writable = await handle.createWritable();
+                            await writable.write(data);
+                            await writable.close();
+
+                            if (typeof window.soundManager !== 'undefined') window.soundManager.playSuccess();
+                            closeBackup();
+                            return;
+                        } catch (err) {
+                            if (err.name === 'AbortError') return;
+                            console.warn("Save As failed, falling back to legacy:", err);
+                        }
+                    }
+
+                    // Legacy Fallback
                     const blob = new Blob([data], { type: 'application/json' });
                     const url = URL.createObjectURL(blob);
 
                     const a = document.createElement('a');
                     a.href = url;
-                    a.download = `Prescriptions_Backup_${timestamp}.json`;
+                    a.download = suggestedName;
                     document.body.appendChild(a);
                     a.click();
                     document.body.removeChild(a);
