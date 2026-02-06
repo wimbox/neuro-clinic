@@ -1,6 +1,6 @@
 /**
- * Firebase Configuration for neuro-clinic
- * Place this file in: /scripts/firebase-config.js
+ * Firebase Configuration Logic
+ * Replace the placeholders below with your project credentials from Firebase Console
  */
 const firebaseConfig = {
     apiKey: "AIzaSyCDXpDM1Q--_1FQb0KumpyiBU6_5oTKcuI",
@@ -16,12 +16,12 @@ const firebaseConfig = {
 // Initialize Firebase (Compat mode for easier integration)
 if (typeof firebase !== 'undefined') {
     firebase.initializeApp(firebaseConfig);
-    console.log("Cloud Sync: Firebase initialized successfully.");
-    
-    // Global access to Cloud services
+    console.log("Firebase initialized successfully.");
+
+    // Global references
     window.db = firebase.firestore();
     window.storage = firebase.storage();
     window.auth = firebase.auth();
 } else {
-    console.warn("Cloud Sync: Firebase SDK not loaded. Working in offline mode.");
+    console.warn("Firebase SDK not loaded. Work in offline mode.");
 }
