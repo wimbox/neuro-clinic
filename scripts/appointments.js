@@ -135,19 +135,30 @@ class AppointmentManager {
     recalcPatientLedger(patientId) {
         if (!patientId || !this.sync.data.finances.ledger) return;
 
-        // 1. Get all transactions for this patient
+        // 1. Get all appointments and transactions for this patient
+        const patientApps = this.sync.data.appointments.filter(a => a.patientId === patientId);
         const patientTxs = this.sync.data.finances.transactions.filter(t => t.patientId === patientId);
 
         // 2. Sum up
         let balance = 0;
+
+        // Costs from appointments (Debit)
+        patientApps.forEach(app => {
+            balance -= parseFloat(app.cost || 0);
+        });
+
+        // Payments from transactions (Credit)
         patientTxs.forEach(t => {
             const amt = parseFloat(t.amount || 0);
             if (t.type === 'income') balance += amt;
-            else balance -= amt;
+            else balance -= amt; // In case of refunds/expenses linked to patient
         });
 
         // 3. Update Ledger
-        this.sync.data.finances.ledger[patientId] = { balance: balance };
+        this.sync.data.finances.ledger[patientId] = {
+            balance: balance,
+            lastUpdated: new Date().toISOString()
+        };
     }
 }
 

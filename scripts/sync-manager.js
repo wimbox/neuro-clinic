@@ -224,6 +224,19 @@ class SyncManager {
                 this.data = parsed;
                 this.saveLocal();
             }
+
+            // --- GLOBAL FINANCIAL RECALCULATION (One-time fix for Dues) ---
+            if (!parsed.settings.hasRunRecalcV2) {
+                setTimeout(() => {
+                    if (window.appointmentManager) {
+                        this.recalcAllLedgers();
+                        this.data.settings.hasRunRecalcV2 = true;
+                        this.saveLocal();
+                        console.log("SyncManager: Global financial recalculation completed.");
+                    }
+                }, 1000);
+            }
+
             return parsed;
         }
 
@@ -551,6 +564,15 @@ class SyncManager {
         }
 
         this.logAction(currentUser, tx.type === 'income' ? 'ADD_INCOME' : 'ADD_EXPENSE', `تسجيل ${tx.type === 'income' ? 'إيراد' : 'مصروف'}: ${tx.description} بقيمة ${tx.amount}`);
+        this.saveLocal();
+    }
+
+    recalcAllLedgers() {
+        if (!window.appointmentManager) return;
+        console.log("SyncManager: Recalculating all patient ledgers...");
+        this.data.patients.forEach(p => {
+            window.appointmentManager.recalcPatientLedger(p.id);
+        });
         this.saveLocal();
     }
 
