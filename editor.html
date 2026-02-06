@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prescription Architect | Medical Document Editor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&family=Inter:wght@400;500;600&family=Cairo:wght@400;500;600;700&family=Amiri:wght@400;700&family=Almarai:wght@400;700&family=El+Messiri:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="styles/main.css?v=27">
+    <link rel="stylesheet" href="styles/editor.css?v=27">
+    <!-- Font Awesome for Icons (using CDN for now, would be local in prod) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body class="theme-light">
+
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="logo-area">
+                <i class="fa-solid fa-file-medical"></i>
+                <span style="font-weight: 600;">PRESCRIPTION v3.11</span>
+            </div>
+
+            <nav class="nav-menu">
+                <button class="nav-btn" id="btn-save-template" title="Save Template">
+                    <i class="fa-solid fa-floppy-disk"></i>
+                </button>
+                <button id="btn-load-template" class="nav-btn" title="Load Template">
+                    <i class="fa-solid fa-folder-open"></i>
+                </button>
+
+                <button id="btn-backup-export" class="nav-btn" title="Save/Load from PC">
+                    <i class="fa-solid fa-file-export"></i>
+                </button> <!-- New Backup/Export Button -->
+
+                <button class="nav-btn" id="btn-workspace-bg" title="Change Workspace Background">
+                    <i class="fa-solid fa-palette"></i>
+                </button>
+            </nav>
+
+            <div class="bottom-actions">
+                <button id="btn-new" class="action-btn-new" title="New Prescription (Clear All)">
+                    N
+                </button>
+                <button id="btn-toggle-print-mode" class="action-btn" title="Toggle Pre-printed Paper Mode (Text Only)">
+                    <i class="fa-solid fa-file-invoice"></i>
+                </button>
+
+                <button id="btn-refresh" class="action-btn" title="Refresh Page (إعادة تحميل)" style="color: #64748b;">
+                    <i class="fa-solid fa-arrows-rotate"></i>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Workspace -->
+        <main class="workspace">
+            <!-- App Header -->
+            <div class="app-header">
+                <div class="ticker-wrap">
+                    <div class="ticker-move">
+                        <div class="ticker-item">
+                            <i class="fa-solid fa-user-doctor"
+                                style="color: #fff; text-shadow: 0 0 10px #00eaff; margin-left: 10px;"></i>
+                            <span class="doc-name">دكتور/ أحمد محمد خليل</span>
+                            <i class="fa-solid fa-star-of-life separator-icon"></i>
+                            <span class="doc-title">مدرس وإستشاري جراحات المخ والأعصاب والعمود الفقري - كلية الطب -
+                                جامعة الأسكندرية</span>
+                            <i class="fa-solid fa-star-of-life separator-icon"></i>
+                            <span class="doc-title">زميل جامعة فوجيتا باليابان</span>
+                            <i class="fa-solid fa-star-of-life separator-icon"></i>
+                        </div>
+                        <!-- Duplicate for seamless loop -->
+                        <div class="ticker-item">
+                            <i class="fa-solid fa-user-doctor"
+                                style="color: #fff; text-shadow: 0 0 10px #00eaff; margin-left: 10px;"></i>
+                            <span class="doc-name">دكتور/ أحمد محمد خليل</span>
+                            <i class="fa-solid fa-star-of-life separator-icon"></i>
+                            <span class="doc-title">مدرس وإستشاري جراحات المخ والأعصاب والعمود الفقري - كلية الطب -
+                                جامعة الأسكندرية</span>
+                            <i class="fa-solid fa-star-of-life separator-icon"></i>
+                            <span class="doc-title">زميل جامعة فوجيتا باليابان</span>
+                            <i class="fa-solid fa-star-of-life separator-icon"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Toolbar -->
+            <header class="toolbar">
+                <div class="tool-group">
+                    <button class="tool-btn" id="btn-back-dashboard" title="العودة للرئيسية"
+                        style="background: #0f172a; color: #fff; width: auto; padding: 0 20px; margin-right: 15px; border-radius: 12px; gap: 12px; border: 2px solid #00eaff; font-weight: 700; text-shadow: 0 0 10px #00eaff, 0 0 20px #00eaff; box-shadow: 0 0 15px rgba(0, 234, 255, 0.3); cursor: pointer; animation: laser-flicker 0.2s infinite alternate;">
+                        <i class="fa-solid fa-house" style="color: #00eaff;"></i> الرئيسية
+                    </button>
+                    <script>
+                        document.getElementById('btn-back-dashboard').onclick = () => window.location.href = 'index.html';
+                    </script>
+                </div>
+                <div class="tool-group text-tools">
+                    <select id="font-family" class="tool-select">
+                        <option value="'Tajawal', sans-serif">Tajawal (تجول)</option>
+                        <option value="'Cairo', sans-serif">Cairo (القاهرة)</option>
+                        <option value="'Amiri', serif">Amiri (أميري)</option>
+                        <option value="'Almarai', sans-serif">Almarai (المرعي)</option>
+                        <option value="'El Messiri', sans-serif">El Messiri (المسيري)</option>
+                        <option value="'Inter', sans-serif">Inter (English)</option>
+                        <option value="'Arial', sans-serif">Arial</option>
+                        <option value="'Times New Roman', serif">Times New Roman</option>
+                    </select>
+                    <input type="number" id="font-size" class="tool-input" value="20" min="8" max="72">
+                    <button class="tool-btn" id="btn-bold"><i class="fa-solid fa-bold"></i></button>
+                    <button class="tool-btn" id="btn-italic"><i class="fa-solid fa-italic"></i></button>
+                    <button class="tool-btn" id="btn-underline"><i class="fa-solid fa-underline"></i></button>
+                    <input type="color" id="text-color" class="tool-color" value="#000000">
+                    <button class="tool-btn" id="btn-toggle-direction" title="تبديل اتجاه الكتابة (RTL/LTR)">
+                        <i class="fa-solid fa-align-right"></i>
+                    </button>
+
+                    <div class="db-tools-inline"
+                        style="display: flex; align-items: center; gap: 5px; margin-left: 10px; padding-left: 10px; border-left: 1px solid rgba(255,255,255,0.1);">
+                        <input type="text" id="new-medicine-input" placeholder="+ دواء جديد..."
+                            style="width: 140px; height: 32px; padding: 0 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white; font-size: 0.85rem; outline: none;">
+                        <button class="tool-btn primary" id="btn-add-to-db" title="إضافة للسجل المؤقت"
+                            style="background: #10b981; color: white;">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                        <button class="tool-btn" id="btn-bulk-add" title="إدارة وإضافة الأدوية بالجملة"
+                            style="background: #8b5cf6; color: white;">
+                            <i class="fa-solid fa-database"></i>
+                        </button>
+                        <button class="tool-btn" id="btn-export-js" title="تنزيل الملف المحدث (medicines.js)"
+                            style="background: #3b82f6; color: white;">
+                            <i class="fa-solid fa-file-export"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Insert Tools Removed as requested -->
+
+                <div class="spacer"></div>
+
+                <div class="status-group">
+                    <div class="workspace-branding glowing-text" id="active-patient-brand"
+                        style="font-size: 0.9rem; position: static; pointer-events: none;">
+                        &nbsp;
+                    </div>
+                    <div class="status-indicator" id="security-status">
+                        <i class="fa-solid fa-shield-halved"></i> Protected
+                    </div>
+                </div>
+                <div class="tool-group">
+                    <div class="tool-divider"></div>
+                </div>
+            </header>
+
+            <!-- Editor Canvas Area -->
+            <div class="canvas-container">
+                <div id="prescription-canvas" class="prescription-sheet a4-page">
+                    <!-- Background Layer -->
+                    <div id="canvas-background" class="layer background-layer"></div>
+
+                    <!-- Watermark Layer (Canvas) -->
+                    <canvas id="watermark-layer" class="layer watermark-layer"></canvas>
+
+                    <div id="header-fields" class="header-writing-areas">
+                        <div class="header-writing-field">
+                            <span class="header-label">الاسم</span>
+                            <div contenteditable="true" spellcheck="false" class="header-input" id="patient-name"
+                                data-placeholder="">
+                            </div>
+                        </div>
+                        <div class="header-writing-field">
+                            <span class="header-label">السن</span>
+                            <div contenteditable="true" spellcheck="false" class="header-input" id="patient-age"
+                                data-placeholder=""></div>
+                        </div>
+                        <div class="header-writing-field">
+                            <span class="header-label">التاريخ</span>
+                            <div contenteditable="true" spellcheck="false" class="header-input" id="patient-date"
+                                data-placeholder="__ / __ / ____"></div>
+                        </div>
+                    </div>
+
+                    <!-- Right Margin Writing Area (from top to bottom, next to the vertical line) -->
+                    <div contenteditable="true" spellcheck="false" class="margin-writing-area" id="right-margin-area">
+                    </div>
+
+                    <!-- Main Content Writing Area (left of the vertical line) -->
+                    <div contenteditable="true" spellcheck="false" class="main-writing-area" id="main-content-area">
+                    </div>
+
+
+                    <!-- Content Layer (for draggable dynamic elements) -->
+                    <div id="canvas-content" class="layer content-layer">
+                        <!-- Dynamic elements go here -->
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- Properties / Context Panel (Right Side) -->
+        <aside class="properties-panel" id="properties-panel" style="padding-top: 90px; gap: 25px;">
+            <button id="btn-print" class="action-btn" title="PRINT DOCUMENT">
+                <i class="fa-solid fa-print"></i>
+            </button>
+
+            <div class="theme-picker" style="display: flex; flex-direction: column; gap: 15px; align-items: center;">
+                <button class="theme-btn" data-theme="theme-blue"
+                    style="width: 30px; height: 30px; border-radius: 50%; background: #0f172a; border: 2px solid #00eaff; cursor: pointer; box-shadow: 0 0 10px rgba(0,234,255,0.3);"
+                    title="Navy Theme"></button>
+                <button class="theme-btn" data-theme="theme-gray"
+                    style="width: 30px; height: 30px; border-radius: 50%; background: #1e293b; border: 2px solid #94a3b8; cursor: pointer; box-shadow: 0 0 10px rgba(148,163,184,0.3);"
+                    title="Dark Slate Theme"></button>
+                <button class="theme-btn" data-theme="theme-gold"
+                    style="width: 30px; height: 30px; border-radius: 50%; background: #78350f; border: 2px solid #fbbf24; cursor: pointer; box-shadow: 0 0 10px rgba(251,191,36,0.3);"
+                    title="Gold Theme"></button>
+            </div>
+
+            <div class="panel-section">
+                <!-- Contextual properties will be injected here -->
+                <p class="placeholder-text">Select an element to edit properties</p>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Modals -->
+    <div id="modal-container" class="modal-backdrop hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Load Template</h2>
+                <button id="close-modal-btn" class="close-btn"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="search-wrap" style="margin-bottom: 15px;">
+                    <input type="text" id="template-search" placeholder="بحث عن قالب (عربي أو English)..."
+                        style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white; outline: none; direction: rtl;">
+                </div>
+                <div class="templates-list" id="templates-list">
+                    <!-- Template Items will be injected here -->
+                    <p class="empty-msg">No templates saved yet.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Protocols Modal -->
+    <div id="protocols-modal" class="modal-backdrop hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fa-solid fa-layer-group"></i> Medical Protocols</h2>
+                <button id="close-protocols-btn" class="close-btn"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="templates-list" id="protocols-list">
+                    <!-- Protocol Items will be injected here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Backup/Sync Modal -->
+    <div id="backup-modal" class="modal-overlay hidden">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2><i class="fa-solid fa-share-nodes"></i> نقل البيانات / نسخ احتياطي</h2>
+                <button id="close-backup-btn" class="close-btn"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom: 20px; color: #64748b; text-align: center;">
+                    يمكنك حفظ جميع بياناتك وقوالبك في ملف واحد ونقلها لأي جهاز آخر بسهولة.
+                </p>
+
+                <div class="backup-actions" style="display: flex; flex-direction: column; gap: 15px;">
+                    <button id="btn-do-export" class="backup-card-btn"
+                        style="background: #f0f9ff; border: 2px solid #bae6fd; padding: 15px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 15px; transition: all 0.2s;">
+                        <div
+                            style="background: #0284c7; color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                            <i class="fa-solid fa-download"></i>
+                        </div>
+                        <div style="text-align: right; flex: 1;">
+                            <h4 style="margin: 0 0 5px 0; color: #0f172a;">حفظ على هذا الجهاز (Export)</h4>
+                            <span style="font-size: 0.85rem; color: #475569;">تحميل ملف يحتوي على كل القوالب لنقله لجهاز
+                                آخر.</span>
+                        </div>
+                    </button>
+
+                    <button id="btn-do-import" class="backup-card-btn"
+                        style="background: #f0fdf4; border: 2px solid #bbf7d0; padding: 15px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 15px; transition: all 0.2s;">
+                        <div
+                            style="background: #16a34a; color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                            <i class="fa-solid fa-upload"></i>
+                        </div>
+                        <div style="text-align: right; flex: 1;">
+                            <h4 style="margin: 0 0 5px 0; color: #0f172a;">استعادة من ملف (Import)</h4>
+                            <span style="font-size: 0.85rem; color: #475569;">فتح ملف تم حفظه مسبقاً لاستعادة البيانات
+                                هنا.</span>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Database Management Modal -->
+    <div id="database-modal" class="modal-backdrop hidden">
+        <div class="modal-content" style="max-width: 800px; height: 90vh;">
+            <div class="modal-header">
+                <h2><i class="fa-solid fa-database"></i> إدارة قاعدة بيانات الأدوية</h2>
+                <button id="close-database-btn" class="close-btn"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body" style="display: flex; flex-direction: column; gap: 20px; overflow: hidden;">
+
+                <div class="db-tabs"
+                    style="display: flex; gap: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">
+                    <button class="tab-btn active" data-tab="tab-add-bulk">إضافة بالجملة (Bulk Add)</button>
+                    <button class="tab-btn" data-tab="tab-manage-list">قائمة الأدوية الحالية</button>
+                </div>
+
+                <!-- Tab: Bulk Add -->
+                <div id="tab-add-bulk" class="tab-content">
+                    <p style="margin-bottom: 10px; color: #94a3b8; font-size: 0.9rem;">قم بلصق قائمة أسماء الأدوية هنا
+                        (كل دواء في سطر منفصل):</p>
+                    <textarea id="bulk-medicine-input" placeholder="مثال:
+Panadol 500mg
+Cataflam 50mg
+..." style="width: 100%; height: 350px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: white; padding: 15px; font-family: 'Inter', sans-serif; font-size: 1rem; resize: none; outline: none;"></textarea>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px;">
+                        <span id="bulk-count-status" style="color: #64748b; font-size: 0.85rem;">0 دواء مكتشف</span>
+                        <div style="display: flex; gap: 10px;">
+                            <button id="btn-process-bulk" class="backup-card-btn"
+                                style="padding: 10px 20px; background: #10b981; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                                <i class="fa-solid fa-plus-circle"></i> إضافة الكل للقائمة
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab: Manage List -->
+                <div id="tab-manage-list" class="tab-content hidden"
+                    style="display: flex; flex-direction: column; gap: 15px; height: 100%; overflow: hidden;">
+                    <div class="search-wrap">
+                        <input type="text" id="db-search" placeholder="بحث في القاعدة الحالية..."
+                            style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white; outline: none;">
+                    </div>
+                    <div id="db-medicine-list"
+                        style="flex: 1; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 8px; padding: 10px; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px;">
+                        <!-- List items will be injected here -->
+                    </div>
+                    <div
+                        style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px; display: flex; justify-content: space-between; align-items: center;">
+                        <span id="db-total-count" style="color: #94a3b8; font-size: 0.9rem;">الإجمالي: 0 دواء</span>
+                    </div>
+                </div>
+
+                <div class="modal-footer"
+                    style="padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; gap: 10px;">
+                    <div
+                        style="background: rgba(59, 130, 246, 0.1); padding: 10px; border-radius: 6px; border: 1px solid rgba(59, 130, 246, 0.3);">
+                        <p style="color: #3b82f6; font-size: 0.85rem; margin-bottom: 5px; font-weight: 600;">
+                            <i class="fa-solid fa-save"></i> التحديث الذكي:
+                        </p>
+                        <p style="color: #94a3b8; font-size: 0.8rem; line-height: 1.4;">
+                            عند الضغط على "حفظ التعديلات"، ستفتح نافذة اختر منها ملف medicines.js في مجلد البرنامج ووافق
+                            على الاستبدال (Replace).
+                        </p>
+                    </div>
+
+                    <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                        <button class="tool-btn" id="btn-copy-for-assistant"
+                            title="نسخ الأسماء للمساعد لتحديث الملف مباشرة"
+                            style="background: #10b981; color: white; width: auto; padding: 0 15px; height: 40px; border-radius: 8px; font-weight: 600;">
+                            <i class="fa-solid fa-copy" style="margin-left: 8px;"></i> نسخ للمساعد (تحديث فوري)
+                        </button>
+                        <button class="tool-btn" id="btn-db-export-js" title="تحديث ملف الأدوية مباشرة"
+                            style="background: #3b82f6; color: white; width: auto; padding: 0 15px; height: 40px; border-radius: 8px; font-weight: 640;">
+                            <i class="fa-solid fa-cloud-arrow-up" style="margin-left: 8px;"></i> حفظ كافة التعديلات
+                            ونظام الاقتراحات
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs (Compat Mode) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-storage-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+    <script src="scripts/firebase-config.js"></script>
+
+    <script src="scripts/sync-manager.js"></script>
+    <script src="scripts/patients.js"></script>
+    <script src="scripts/medicines.js"></script>
+    <script src="scripts/user_medicines.js"></script>
+    <script src="scripts/frequencies.js"></script>
+    <script src="scripts/protocols.js"></script>
+    <script src="scripts/drug-interactions.js"></script>
+    <script src="scripts/suggestions.js"></script>
+    <script src="scripts/app.js?v=2.3"></script>
+</body>
+
+</html>

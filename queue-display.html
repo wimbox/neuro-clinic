@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neuro-Clinic | قائمة الانتظار</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --bg-color: #07090f;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --accent: #00eaff;
+            --text: #f3f4f6;
+            --active-bg: rgba(16, 185, 129, 0.15);
+            --active-border: #10b981;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: radial-gradient(circle at 50% 50%, #1e293b 0%, #07090f 100%);
+            color: var(--text);
+            font-family: 'Tajawal', sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        header {
+            height: 100px;
+            background: rgba(15, 23, 42, 0.9);
+            border-bottom: 2px solid rgba(0, 234, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 50px;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+            z-index: 10;
+        }
+
+        .logo h1 {
+            color: var(--accent);
+            font-size: 2.5rem;
+            margin: 0;
+            text-shadow: 0 0 15px var(--accent);
+        }
+
+        .clock {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #fff;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px 20px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Main Content */
+        .container {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 40px;
+            padding: 40px;
+            overflow: hidden;
+        }
+
+        /* Current Patient Card */
+        .current-patient-card {
+            background: linear-gradient(145deg, rgba(16, 185, 129, 0.1), rgba(6, 78, 59, 0.2));
+            border: 4px solid #10b981;
+            border-radius: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            box-shadow: 0 0 50px rgba(16, 185, 129, 0.2);
+            position: relative;
+            animation: pulse-border 2s infinite;
+        }
+
+        @keyframes pulse-border {
+            0% {
+                box-shadow: 0 0 20px rgba(16, 185, 129, 0.2);
+            }
+
+            50% {
+                box-shadow: 0 0 60px rgba(16, 185, 129, 0.5);
+            }
+
+            100% {
+                box-shadow: 0 0 20px rgba(16, 185, 129, 0.2);
+            }
+        }
+
+        .status-badge {
+            background: #10b981;
+            color: #000;
+            padding: 10px 40px;
+            border-radius: 50px;
+            font-size: 1.5rem;
+            font-weight: 900;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.6);
+        }
+
+        .patient-number {
+            font-size: 8rem;
+            font-weight: 900;
+            color: #fff;
+            line-height: 1;
+            margin-bottom: 20px;
+            text-shadow: 0 0 30px rgba(255, 255, 255, 0.5);
+            font-family: 'Inter', sans-serif;
+        }
+
+        .patient-name {
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: var(--accent);
+            text-shadow: 0 0 20px rgba(0, 234, 255, 0.3);
+        }
+
+        .blink {
+            animation: blink 1s linear infinite;
+        }
+
+        @keyframes blink {
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        /* Next List */
+        .queue-list-container {
+            background: rgba(15, 23, 42, 0.6);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 25px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .queue-header {
+            font-size: 2rem;
+            color: #94a3b8;
+            margin-bottom: 20px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .queue-items {
+            flex: 1;
+            overflow-y: hidden;
+            /* Hide scroll for TV aesthetics */
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .queue-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-right: 5px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .queue-item.next {
+            background: rgba(245, 158, 11, 0.1);
+            border-right: 5px solid #f59e0b;
+        }
+
+        .q-name {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .q-code {
+            font-size: 1.8rem;
+            color: #64748b;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 5px 15px;
+            border-radius: 10px;
+            font-family: 'Inter';
+        }
+
+        /* Marquee Footer */
+        footer {
+            height: 60px;
+            background: #000;
+            border-top: 1px solid #333;
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .marquee {
+            white-space: nowrap;
+            animation: marquee 30s linear infinite;
+            color: #fff;
+            font-size: 1.4rem;
+        }
+
+        @keyframes marquee {
+            0% {
+                transform: translateX(-100%);
+            }
+
+            100% {
+                transform: translateX(100%);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div class="logo">
+            <h1><i class="fa-solid fa-brain"></i> Neuro-Clinic</h1>
+        </div>
+        <div class="clock" id="clock">00:00 PM</div>
+    </header>
+
+    <div class="container">
+        <!-- Current Patient -->
+        <div class="current-patient-card" id="current-patient-area">
+            <div class="status-badge">الآن في الكشف</div>
+            <div class="patient-number" id="current-number">---</div>
+            <div class="patient-name" id="current-name">لا يوجد مريض الآن</div>
+            <div style="font-size: 1.5rem; color: #fff; margin-top: 30px; opacity: 0.8;">الرجاء الهدوء والانتظار</div>
+        </div>
+
+        <!-- Waiting List -->
+        <div class="queue-list-container">
+            <div class="queue-header">
+                <span>القادمون</span>
+                <span style="font-size: 1rem; color: #64748b;">Waiting List</span>
+            </div>
+            <div class="queue-items" id="queue-list">
+                <!-- Items -->
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="marquee" id="news-ticker">
+            يرجى تحضير بطاقة الهوية والتحاليل الطبية قبل الدخول للطبيب ... نرجو الالتزام بالهدوء لراحة المرضى ... مواعيد
+            العمل من 4 عصراً إلى 10 مساءً
+        </div>
+    </footer>
+
+    <!-- Audio for Notifications -->
+    <audio id="bell-sound" src="assets/sounds/bell.mp3" preload="auto"></audio>
+
+    <script>
+        // Clock
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('clock').innerText = now.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+        }, 1000);
+
+        // Queue Logic
+        const loadQueue = () => {
+            const data = localStorage.getItem('neuro-clinic-queue');
+            return data ? JSON.parse(data) : [];
+        };
+
+        let lastCurrentId = null;
+
+        const updateDisplay = () => {
+            const queue = loadQueue();
+
+            // Filter Today's Active
+            const startOfDay = new Date();
+            startOfDay.setHours(0, 0, 0, 0);
+
+            const active = queue.filter(q => {
+                const isToday = new Date(q.checkInTime) >= startOfDay;
+                return isToday && q.status !== 'cancelled' && q.status !== 'completed';
+            }).sort((a, b) => a.checkInTime - b.checkInTime);
+
+            // Get Current (In Progress)
+            const current = active.find(q => q.status === 'in-progress');
+            const waiting = active.filter(q => q.status === 'waiting');
+
+            // Update Current Area
+            const nameEl = document.getElementById('current-name');
+            const numEl = document.getElementById('current-number');
+            const card = document.getElementById('current-patient-area');
+
+            if (current) {
+                nameEl.innerText = current.patientName;
+                numEl.innerText = '#' + (current.patientCode || '00');
+
+                // Play Sound if new patient
+                if (lastCurrentId !== current.id) {
+                    playBell();
+                    card.classList.add('blink');
+                    setTimeout(() => card.classList.remove('blink'), 5000);
+                    lastCurrentId = current.id;
+                }
+            } else {
+                nameEl.innerText = 'استراحة';
+                numEl.innerText = '---';
+                lastCurrentId = null;
+            }
+
+            // Update List
+            const listEl = document.getElementById('queue-list');
+
+            if (waiting.length === 0) {
+                listEl.innerHTML = '<div style="text-align: center; color: #64748b; font-size: 1.5rem; margin-top: 50px;">القائمة فارغة الآن</div>';
+            } else {
+                listEl.innerHTML = waiting.slice(0, 6).map((item, index) => `
+                    <div class="queue-item ${index === 0 ? 'next' : ''}">
+                        <div class="q-name">${item.patientName}</div>
+                        <div class="q-code">#${item.patientCode || '00'}</div>
+                    </div>
+                `).join('');
+            }
+        };
+
+        const playBell = () => {
+            const audio = document.getElementById('bell-sound');
+            if (audio) {
+                audio.play().catch(e => console.log('Audio autoplay blocked'));
+            }
+        };
+
+        // Listen for storage changes (Sync across tabs)
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'neuro-queue-updated' || e.key === 'neuro-clinic-queue') {
+                updateDisplay();
+            }
+        });
+
+        // Initial Load
+        updateDisplay();
+        // Fallback polling
+        setInterval(updateDisplay, 5000);
+
+    </script>
+</body>
+
+</html>

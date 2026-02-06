@@ -1,0 +1,144 @@
+/**
+ * Patient Documents Manager
+ * Handles uploading, viewing, and organizing patient medical documents
+ */
+class PatientDocuments {
+    constructor() {
+        this.documents = this.loadDocuments();
+    }
+
+    /**
+     * Load documents from localStorage
+     */
+    loadDocuments() {
+        const data = localStorage.getItem('neuro-patient-documents');
+        return data ? JSON.parse(data) : {};
+    }
+
+    /**
+     * Save documents to localStorage
+     */
+    saveDocuments() {
+        localStorage.setItem('neuro-patient-documents', JSON.stringify(this.documents));
+    }
+
+    /**
+     * Add document for a patient
+     */
+    async addDocument(patientId, documentData) {
+        if (!this.documents[patientId]) {
+            this.documents[patientId] = [];
+        }
+
+        const doc = {
+            id: 'doc-' + Date.now(),
+            patientId: patientId,
+            name: documentData.name,
+            type: documentData.type, // 'xray', 'ct', 'mri', 'lab', 'report', 'other'
+            category: this.getCategoryFromType(documentData.type),
+            fileData: documentData.fileData, // Base64 encoded (backup/offline)
+            mimeType: documentData.mimeType,
+            uploadDate: new Date().toISOString(),
+            notes: documentData.notes || '',
+            size: documentData.size || 0,
+            cloudUrl: null // Will be filled if successfully uploaded to Firebase
+        };
+
+        // --- Cloud Sync: Firebase Storage ---
+        if (typeof storage !== 'undefined' && storage && documentData.blob) {
+            try {
+                console.log("Documents Sync: Uploading to cloud storage...");
+                const storageRef = storage.ref(`documents/${patientId}/${doc.id}`);
+                const snapshot = await storageRef.put(documentData.blob);
+                const downloadURL = await snapshot.ref.getDownloadURL();
+                doc.cloudUrl = downloadURL;
+                // Once uploaded to storage, we can optionally clear the bulky base64 fileData 
+                // to save local storage space, or keep it for offline.
+                // For now, let's keep it but mark cloud as success.
+                console.log("Documents Sync: Success. URL:", downloadURL);
+            } catch (err) {
+                console.error("Documents Sync: Failed to upload to cloud storage.", err);
+            }
+        }
+
+        this.documents[patientId].push(doc);
+        this.saveDocuments();
+
+        // Also trigger general sync since the patients data might have links
+        if (window.syncManager) window.syncManager.saveLocal();
+
+        return doc;
+    }
+
+    /**
+     * Get category icon and label from type
+     */
+    getCategoryFromType(type) {
+        const categories = {
+            'xray': { icon: 'fa-x-ray', label: 'أشعة X-Ray', color: '#3b82f6' },
+            'ct': { icon: 'fa-brain', label: 'أشعة CT', color: '#8b5cf6' },
+            'mri': { icon: 'fa-magnet', label: 'أشعة MRI', color: '#ec4899' },
+            'lab': { icon: 'fa-flask', label: 'تحليل معملي', color: '#10b981' },
+            'report': { icon: 'fa-file-medical', label: 'تقرير طبي', color: '#f59e0b' },
+            'other': { icon: 'fa-file', label: 'مستند آخر', color: '#64748b' }
+        };
+        return categories[type] || categories['other'];
+    }
+
+    /**
+     * Get all documents for a patient
+     */
+    getPatientDocuments(patientId) {
+        return this.documents[patientId] || [];
+    }
+
+    /**
+     * Get documents filtered by type
+     */
+    getDocumentsByType(patientId, type) {
+        const docs = this.getPatientDocuments(patientId);
+        return docs.filter(d => d.type === type);
+    }
+
+    /**
+     * Delete document
+     */
+    deleteDocument(patientId, documentId) {
+        if (this.documents[patientId]) {
+            this.documents[patientId] = this.documents[patientId].filter(d => d.id !== documentId);
+            this.saveDocuments();
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Get document by ID
+     */
+    getDocument(patientId, documentId) {
+        const docs = this.getPatientDocuments(patientId);
+        return docs.find(d => d.id === documentId);
+    }
+
+    /**
+     * Get total storage size for a patient (in bytes)
+     */
+    getStorageSize(patientId) {
+        const docs = this.getPatientDocuments(patientId);
+        return docs.reduce((total, doc) => total + (doc.size || 0), 0);
+    }
+
+    /**
+     * Format file size
+     */
+    formatSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+    }
+}
+
+// Global instance
+window.patientDocuments = new PatientDocuments();

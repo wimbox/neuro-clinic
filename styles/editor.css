@@ -1,0 +1,447 @@
+/* Canvas Area */
+.canvas-container {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px;
+    overflow: auto;
+
+    /* Modern Geometric Pattern - Diagonal Stripes (matching workspace) */
+    background:
+        linear-gradient(135deg, #2a2a2a 25%, transparent 25%) -10px 0,
+        linear-gradient(225deg, #2a2a2a 25%, transparent 25%) -10px 0,
+        linear-gradient(315deg, #2a2a2a 25%, transparent 25%),
+        linear-gradient(45deg, #2a2a2a 25%, transparent 25%);
+    background-size: 20px 20px;
+    background-color: #1e1e1e;
+}
+
+.prescription-sheet {
+    /* B5 Dimensions (ISO) */
+    width: 176mm;
+    height: 250mm;
+    background: white;
+    box-shadow: var(--shadow-lg);
+    position: relative;
+    transition: transform 0.3s ease;
+    transform-origin: top center;
+    /* Ensure it doesn't shrink */
+    flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+    .canvas-container {
+        padding: 20px;
+        align-items: flex-start;
+        /* Better scrolling */
+    }
+
+    .prescription-sheet {
+        /* Optional: Scaling for mobile view */
+        /* zoom: 0.5; - CSS zoom is non-standard but effective, or transform */
+        transform-origin: top left;
+        /* Let user scroll naturally or pinch zoom if implemented, 
+           but for basic responsive, we just ensure it doesn't break layout */
+    }
+}
+
+/* Toggle Background Visibility */
+.hide-background .background-layer {
+    opacity: 0;
+    /* Visually hide but keep layout if needed */
+}
+
+/* Layers */
+.layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+.background-layer {
+    z-index: 1;
+    /* Default background if none loaded */
+    background-color: white;
+    background-size: 100% 100%;
+    background-position: center;
+    background-repeat: no-repeat;
+    pointer-events: none;
+    /* Let clicks pass unless in move mode */
+}
+
+.watermark-layer {
+    z-index: 2;
+    pointer-events: none;
+    opacity: 0.1;
+    /* For debugging, typically 0 or hidden but prompt says 'invisible' meaning steganography usually */
+    /* Ideally this is hidden or used for computation */
+    display: none;
+}
+
+.content-layer {
+    z-index: 3;
+}
+
+/* Fixed Header Writing Areas */
+.header-writing-areas {
+    position: absolute;
+    top: 61mm;
+    /* تم رفعه بمقدار 1 سم (10 ملم) عن الوضع السابق */
+    left: 0;
+    right: 0;
+    z-index: 4;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 0 10mm 0 10mm;
+    gap: 8mm;
+    direction: rtl;
+    height: 12mm;
+}
+
+.header-writing-field {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.header-label {
+    font-family: 'Cairo', 'Tajawal', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: #0f172a;
+    white-space: nowrap;
+    display: none;
+    /* إخفاء التسميات لأنها موجودة في الصورة */
+}
+
+.header-input {
+    border: none;
+    border-radius: 4px;
+    background: transparent;
+    padding: 5px 10px;
+    font-family: 'Tajawal', sans-serif;
+    font-size: 20px;
+    /* تثبيت حجم الخط على 20 */
+    font-weight: 700;
+    color: #0f172a;
+    /* لون داكن للكتابة */
+    text-align: center;
+    direction: rtl;
+    outline: none;
+    min-height: 28px;
+    cursor: text;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.header-input:focus {
+    border-bottom: 2px dashed rgba(59, 130, 246, 0.5);
+    /* خط خفيف أسفل النص عند الكتابة فقط */
+    background: rgba(255, 255, 255, 0.2);
+    box-shadow: none;
+}
+
+.header-input:empty:before {
+    content: attr(data-placeholder);
+    color: #94a3b8;
+    font-size: 13px;
+}
+
+/* Patient Name Field - Wider */
+#patient-name {
+    min-width: 200px;
+    max-width: 300px;
+    flex: 1;
+    margin-right: 20px;
+    /* تحريك الخانة لليسار قليلاً (إبعادها عن كلمة الاسم) */
+}
+
+/* Patient Age Field - Circle style inputs removed, text only */
+#patient-age {
+    width: 60px;
+    height: 50px;
+    border-radius: 0;
+    border: none;
+    background: transparent;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: 800;
+    flex-shrink: 0;
+    margin-right: 25px;
+    /* تحريك الخانة لليسار بمقدار 5 مسافات لضبط المحاذاة */
+}
+
+/* Patient Date Field */
+#patient-date {
+    width: 140px;
+    flex-shrink: 0;
+}
+
+/* Right Margin Writing Area - Positioned correctly on the right side */
+.margin-writing-area {
+    position: absolute;
+    top: calc(307px - 1cm + 3mm);
+    /* تم رفعه بمقدار 1 سم عن الوضع السابق */
+    right: 3mm;
+    /* Small margin from right edge */
+    width: 28mm;
+    /* Narrow vertical column */
+    bottom: 20mm;
+    /* Leave space for footer */
+    z-index: 3;
+    background: transparent;
+    border: none;
+    outline: none;
+    padding: 3mm 2mm;
+    font-family: 'Tajawal', sans-serif;
+    font-size: 20px;
+    /* تثبيت الحجم على 20 */
+    line-height: 1.8;
+    color: #1e293b;
+    direction: rtl;
+    text-align: right;
+    overflow-y: auto;
+    cursor: text;
+    /* Visual guide during editing */
+    transition: background 0.2s;
+}
+
+.margin-writing-area:focus {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* Main Content Writing Area - Center/Left of vertical line */
+.main-writing-area {
+    position: absolute;
+    top: calc(307px - 1cm + 3mm);
+    /* تم رفعه بمقدار 1 سم عن الوضع السابق */
+    right: 36mm;
+    /* Start after the margin area + vertical line */
+    left: 8mm;
+    /* Left padding */
+    bottom: 20mm;
+    /* Leave space for footer */
+    z-index: 3;
+    background: transparent;
+    border: none;
+    outline: none;
+    padding: 4mm;
+    font-family: 'Tajawal', sans-serif;
+    font-size: 20px;
+    /* تثبيت الحجم على 20 */
+    line-height: 2.2;
+    color: #1e293b;
+    direction: ltr;
+    text-align: left;
+    overflow-y: auto;
+    cursor: text;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.main-writing-area:hover {
+    transform: translateX(5px);
+    background: rgba(59, 130, 246, 0.05);
+}
+
+.main-writing-area:focus {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+/* Update content layer to not interfere */
+.content-layer {
+    z-index: 2;
+    pointer-events: none;
+}
+
+.content-layer>* {
+    pointer-events: auto;
+}
+
+
+
+/* Text Elements */
+.text-element {
+    position: absolute;
+    min-width: 50px;
+    min-height: 20px;
+    padding: 4px;
+    /* Padding for selection border */
+    cursor: move;
+    border: 1px solid transparent;
+    outline: none;
+    white-space: pre-wrap;
+    /* Preserve newlines */
+    direction: rtl;
+    /* Default for Arabic */
+    line-height: 1.5;
+}
+
+.text-element:hover {
+    border: 1px dashed #94a3b8;
+}
+
+.text-element.selected {
+    border: 1px solid var(--primary-color);
+    background: rgba(59, 130, 246, 0.05);
+    resize: both;
+    overflow: auto;
+}
+
+.text-element:focus {
+    cursor: text;
+    border: 1px solid var(--primary-color);
+    background: rgba(255, 255, 255, 0.5);
+    /* Slight fill to see bounds */
+}
+
+/* Locked Mode */
+.prescription-sheet.locked .text-element {
+    cursor: text !important;
+    /* Override move cursor */
+    border-color: transparent !important;
+    /* Hide border hint */
+}
+
+.prescription-sheet.locked .text-element:hover {
+    border: 1px dashed transparent;
+    /* visual feedback that it's not draggable */
+}
+
+/* Print Styles */
+/* Print Styles */
+@media print {
+    @page {
+        size: B5;
+        /* أو 176mm 250mm */
+        margin: 0mm;
+        /* Zero margins to prevent overflow */
+    }
+
+    body,
+    html {
+        margin: 0;
+        padding: 0;
+        background: white;
+        width: 176mm;
+        height: 250mm;
+        overflow: hidden;
+        /* Hide anything outside */
+    }
+
+    body * {
+        visibility: hidden;
+    }
+
+    /* Reset Container Styles */
+    .canvas-container {
+        padding: 0 !important;
+        margin: 0 !important;
+        background: none !important;
+        display: block !important;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 176mm !important;
+        height: 250mm !important;
+        overflow: hidden !important;
+    }
+
+    .prescription-sheet,
+    .prescription-sheet * {
+        visibility: visible;
+    }
+
+    /* Background Toggle for Print */
+    body.hide-background .background-layer {
+        display: none !important;
+    }
+
+    .prescription-sheet {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 176mm;
+        height: 250mm;
+        /* Exact B5 height */
+        margin: 0;
+        box-shadow: none;
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
+        overflow: hidden;
+        transform: none !important;
+    }
+
+    /* Clean up UI elements from print */
+    .text-element {
+        border: none !important;
+        background: transparent !important;
+    }
+
+    /* Ensure header inputs are clean */
+    .header-input {
+        border: none !important;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+
+    /* Hide scrollbars in writing areas */
+    .margin-writing-area,
+    .main-writing-area {
+        overflow: visible !important;
+        /* Allow text to print fully if slightly long, but clipped by sheet */
+        height: auto !important;
+        /* Let content determine height but capped by sheet overflow */
+    }
+}
+
+/* Suggestion Popup Styles */
+.suggestion-popup {
+    position: absolute;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    width: 300px;
+    max-height: 250px;
+    overflow-y: auto;
+    z-index: 9999;
+    font-family: 'Inter', sans-serif;
+    padding: 4px;
+}
+
+.suggestion-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #334155;
+    border-radius: 4px;
+    transition: background 0.1s;
+    text-align: left;
+    direction: ltr;
+    /* Medicine names are usually English */
+}
+
+.dosage-item {
+    text-align: right;
+    direction: rtl;
+    font-family: 'Tajawal', 'Inter', sans-serif;
+}
+
+.suggestion-item:hover,
+.suggestion-item.selected {
+    background-color: #f1f5f9;
+    color: #0f172a;
+}
+
+.suggestion-item strong {
+    color: #2563eb;
+    font-weight: 600;
+}

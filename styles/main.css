@@ -1,0 +1,1020 @@
+:root {
+    /* Colors */
+    --primary-hue: 210;
+    /* Dimensions */
+    --sidebar-width: 80px;
+    --header-height: 40px;
+    --properties-width: 80px;
+    /* Exactly matching sidebar */
+}
+
+body {
+    /* Base Colors derived from hue */
+    --primary-color: #0f172a;
+    /* كحلي عميق (Navy) */
+    --primary-hover: #1e293b;
+
+    --secondary-color: hsl(160, 60%, 45%);
+
+    /* Dark Mode Base Colors */
+    --bg-app: #1a1a1a;
+    --bg-panel: hsl(var(--primary-hue), 20%, 15%);
+    --bg-card: hsl(var(--primary-hue), 15%, 18%);
+    --text-main: #e5e7eb;
+    --text-muted: #9ca3af;
+    --border-color: rgba(255, 255, 255, 0.1);
+
+    --bg-header: hsla(var(--primary-hue), 15%, 15%, 0.85);
+
+    --text-main: #e0e0e0;
+    --text-muted: #a0a0a0;
+    --border-color: hsl(var(--primary-hue), 10%, 25%);
+
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.15);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+
+    --glass-bg: hsla(var(--primary-hue), 15%, 20%, 0.7);
+    --glass-border: 1px solid hsla(var(--primary-hue), 15%, 30%, 0.3);
+    --glass-blur: blur(12px);
+
+    /* Gradients */
+    --grad-sidebar: linear-gradient(180deg,
+            hsl(var(--primary-hue), 50%, 25%) 0%,
+            hsl(var(--primary-hue), 50%, 10%) 100%);
+
+    --grad-header: linear-gradient(180deg,
+            rgba(255, 255, 255, 0.15) 0%,
+            rgba(255, 255, 255, 0) 50%,
+            rgba(0, 0, 0, 0.2) 51%,
+            rgba(0, 0, 0, 0.1) 100%),
+        hsl(var(--primary-hue), 60%, 30%);
+
+    --grad-panel: linear-gradient(180deg,
+            hsl(var(--primary-hue), 40%, 20%) 0%,
+            hsl(var(--primary-hue), 40%, 12%) 100%);
+
+    --glass-shine: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, transparent 50%);
+
+    font-family: 'Inter', 'Tajawal', sans-serif;
+    color: var(--text-main);
+
+    /* Modern Geometric Pattern - Diagonal Stripes */
+    background:
+        linear-gradient(135deg, #2a2a2a 25%, transparent 25%) -10px 0,
+        linear-gradient(225deg, #2a2a2a 25%, transparent 25%) -10px 0,
+        linear-gradient(315deg, #2a2a2a 25%, transparent 25%),
+        linear-gradient(45deg, #2a2a2a 25%, transparent 25%);
+    background-size: 20px 20px;
+    background-color: #1e1e1e;
+
+    height: 100vh;
+    overflow: hidden;
+    user-select: none;
+}
+
+/* Themes */
+body.theme-gray {
+    --primary-hue: 220;
+    --primary-color: #1e293b;
+}
+
+/* الاستايل الثالث المقترح: Cyber Gold (Luxury Tech) */
+body.theme-gold {
+    --primary-hue: 35;
+    --primary-color: #451a03;
+    --secondary-color: #fbbf24;
+}
+
+body.theme-gold .sidebar,
+body.theme-gold .app-header,
+body.theme-gold .toolbar,
+body.theme-gold .properties-panel {
+    background: linear-gradient(180deg, #78350f 0%, #451a03 100%) !important;
+}
+
+body.theme-gold .nav-btn,
+body.theme-gold .action-btn,
+body.theme-gold .action-btn-new,
+body.theme-gold #btn-print {
+    border-color: #fbbf24 !important;
+    color: #fbbf24 !important;
+    box-shadow: 0 0 15px rgba(251, 191, 36, 0.4) !important;
+    text-shadow: 0 0 10px #fbbf24;
+}
+
+body.theme-gold .nav-btn:hover,
+body.theme-gold .action-btn:hover,
+body.theme-gold #btn-print:hover {
+    background: #fbbf24 !important;
+    color: #451a03 !important;
+    box-shadow: 0 0 30px #fbbf24 !important;
+}
+
+
+
+
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+/* Removed redundant body block */
+
+.app-container {
+    display: grid;
+    grid-template-columns: var(--sidebar-width) 1fr var(--properties-width);
+    grid-template-rows: 1fr;
+    height: 100vh;
+    margin: 0;
+    position: relative;
+    background: var(--bg-dark);
+    overflow: hidden;
+    transition: all 0.4s ease;
+}
+
+/* إزالة القطع الإضافية التي تسبب فواصل بصرية */
+.app-container::before,
+.app-container::after {
+    display: none;
+}
+
+/* Sidebar */
+.sidebar {
+    background: var(--primary-color);
+    /* الإطار الداخلي الذي يتغير مع الاستايل */
+    border: none;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 15px;
+    padding-bottom: 50px;
+    z-index: 20;
+    box-shadow: inset -5px 0 15px rgba(0, 0, 0, 0.2);
+}
+
+.logo-area {
+    text-align: center;
+    padding: 0 0 15px 0;
+    margin-bottom: 5px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.logo-area i {
+    font-size: 2.22rem;
+    margin-bottom: 8px;
+    display: block;
+    background: linear-gradient(135deg, #bf953f 0%, #fcf6ba 45%, #b38728 50%, #fbf5b7 55%, #aa771c 100%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 2px rgba(184, 134, 11, 0.5));
+}
+
+.logo-area span {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 700 !important;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    background: linear-gradient(135deg, #bf953f 0%, #fcf6ba 45%, #b38728 50%, #fbf5b7 55%, #aa771c 100%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.5));
+}
+
+.nav-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    margin-top: 5px;
+    align-items: center;
+}
+
+.nav-btn,
+.action-btn {
+    width: 60px;
+    height: 60px;
+    border-radius: 15px;
+    border: 3px solid #00eaff;
+    background: #0f172a;
+    color: #00eaff !important;
+    /* Force neon color for icons */
+    font-size: 1.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 15px rgba(0, 234, 255, 0.4);
+    transition: all 0.3s ease;
+}
+
+.nav-btn:hover,
+.action-btn:hover {
+    transform: scale(1.1);
+    background: #00eaff;
+    color: #0f172a !important;
+    box-shadow: 0 0 30px #00eaff;
+}
+
+.nav-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.nav-btn.active {
+    background: #00eaff;
+    color: #0f172a !important;
+    box-shadow: 0 0 25px rgba(0, 234, 255, 0.8);
+}
+
+.bottom-actions {
+    margin-top: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.action-btn-new {
+    width: 60px;
+    height: 60px;
+    border-radius: 15px;
+    border: 3px solid #00eaff;
+    background: #0f172a;
+    color: #00eaff;
+    font-size: 2rem;
+    font-weight: 800;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 25px;
+    margin-bottom: 20px;
+    box-shadow: 0 0 15px rgba(0, 234, 255, 0.4);
+    transition: all 0.3s ease;
+    text-shadow: 0 0 10px #00eaff;
+}
+
+.action-btn-new:hover {
+    transform: scale(1.1);
+    background: #00eaff;
+    color: #0f172a;
+    box-shadow: 0 0 30px #00eaff;
+}
+
+/* القوة الضاربة لتثبيت مقاس الخط 20 في كل الخلايا */
+[contenteditable="true"],
+.text-element,
+.header-input {
+    font-size: 20px !important;
+}
+
+.action-btn.warning,
+.action-btn.unlocked-state {
+    border-color: #94a3b8;
+    color: #94a3b8 !important;
+    box-shadow: 0 0 15px rgba(148, 163, 184, 0.3);
+}
+
+.action-btn.warning:hover,
+.action-btn.unlocked-state:hover {
+    background: #94a3b8;
+    color: #0f172a !important;
+}
+
+.action-btn.locked-state {
+    border-color: #22c55e;
+    color: #22c55e !important;
+    box-shadow: 0 0 15px rgba(34, 197, 94, 0.4);
+}
+
+.action-btn.locked-state:hover {
+    background: #22c55e;
+    color: #0f172a !important;
+}
+
+.action-btn.sync-btn {
+    border-color: #8b5cf6;
+    color: #8b5cf6 !important;
+    box-shadow: 0 0 15px rgba(139, 92, 246, 0.4);
+}
+
+.action-btn.sync-btn:hover {
+    background: #8b5cf6;
+    color: #0f172a !important;
+}
+
+/* Workspace */
+.workspace {
+    display: flex;
+    flex-direction: column;
+    /* Dark background for the workspace area to contrast with the paper */
+    background: radial-gradient(circle at 50% 50%, hsl(var(--primary-hue), 20%, 15%) 0%, hsl(var(--primary-hue), 20%, 5%) 100%);
+    position: relative;
+    overflow: hidden;
+}
+
+.workspace-branding {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    /* Physical Left (near Properties Panel in RTL) */
+    z-index: 20;
+    font-size: 1.5rem;
+    pointer-events: none;
+    /* Let clicks pass through */
+    white-space: nowrap;
+}
+
+/* App Header & Ticker */
+.app-header {
+    height: var(--header-height);
+    background: rgba(15, 23, 42, 0.95);
+    border-bottom: 1px solid rgba(0, 234, 255, 0.2) !important;
+    display: flex;
+    align-items: center;
+    position: relative;
+    z-index: 100;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3) !important;
+}
+
+.ticker-wrap {
+    width: 100%;
+    overflow: hidden;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+}
+
+.ticker-move {
+    display: flex;
+    white-space: nowrap;
+    animation: ticker-loop 80s linear infinite;
+    direction: ltr;
+}
+
+.ticker-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 40px;
+    padding-left: 100px;
+    direction: rtl;
+    flex-shrink: 0;
+}
+
+.doc-name {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #fff;
+    text-shadow: 0 0 10px #fff, 0 0 20px #00eaff;
+}
+
+.doc-title {
+    font-size: 0.95rem;
+    color: #00eaff;
+    font-weight: 600;
+    text-shadow: 0 0 10px rgba(0, 234, 255, 0.5);
+}
+
+.separator-icon {
+    font-size: 0.8rem;
+    color: #fff;
+    filter: drop-shadow(0 0 8px #00eaff);
+    opacity: 0.9;
+}
+
+/* شعاع الليزر المسحي */
+.ticker-item::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg,
+            transparent 0%,
+            rgba(0, 234, 255, 0) 45%,
+            rgba(0, 234, 255, 0.8) 50%,
+            rgba(0, 234, 255, 0) 55%,
+            transparent 100%);
+    background-size: 200% 100%;
+    animation: laser-scan 3s linear infinite;
+    pointer-events: none;
+    z-index: 2;
+}
+
+@keyframes laser-scan {
+    0% {
+        background-position: -100% 0;
+    }
+
+    100% {
+        background-position: 100% 0;
+    }
+}
+
+@keyframes laser-flicker {
+    0% {
+        opacity: 0.98;
+        text-shadow: 0 0 10px #00eaff;
+    }
+
+    100% {
+        opacity: 1;
+        text-shadow: 0 0 25px #00eaff, 0 0 5px #fff;
+    }
+}
+
+@keyframes ticker-loop {
+    0% {
+        transform: translateX(0);
+    }
+
+    100% {
+        transform: translateX(50%);
+    }
+}
+
+
+/* Glowing Text (Blue Neon) */
+.glowing-text {
+    font-size: 1.2rem;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 10px;
+    animation: glow-pulse 1.5s infinite alternate;
+    color: #fff;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    border: 1px solid rgba(0, 234, 255, 0.3);
+}
+
+@keyframes glow-pulse {
+    0% {
+        text-shadow: 0 0 5px #fff, 0 0 10px #00eaff;
+    }
+
+    100% {
+        text-shadow: 0 0 15px #00eaff, 0 0 25px #00eaff;
+    }
+}
+
+/* Toolbar */
+.toolbar {
+    height: var(--header-height);
+    background: var(--primary-color);
+    /* شريط الأدوات مدمج لونياً */
+    border: none;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    gap: 15px;
+    z-index: 10;
+    filter: brightness(1.1);
+    /* تفتيح بسيط للتمييز */
+}
+
+.tool-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.tool-divider {
+    width: 1px;
+    height: 24px;
+    background: var(--border-color);
+    margin: 0 8px;
+}
+
+.tool-btn {
+    width: 32px;
+    height: 32px;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-main);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tool-btn:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+}
+
+.tool-btn.active {
+    background: #e0e7ff;
+    color: var(--primary-color);
+}
+
+.tool-select {
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid #cbd5e1;
+    background: white;
+    font-family: inherit;
+    font-size: 0.9rem;
+}
+
+.tool-input {
+    width: 60px;
+    padding: 6px;
+    border-radius: 6px;
+    border: 1px solid #cbd5e1;
+}
+
+.tool-color {
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    background: transparent;
+}
+
+.spacer {
+    flex: 1;
+}
+
+.status-indicator {
+    font-size: 0.85rem;
+    color: var(--secondary-color);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: rgba(220, 252, 231, 0.5);
+    border-radius: 20px;
+}
+
+/* Properties Panel */
+.properties-panel {
+    background: var(--primary-color);
+    border: none;
+    padding: 15px 0;
+    overflow: hidden;
+    /* تغيير لضمان عمل السبيسر والحفاظ على الاستايل الموحد */
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: inset 5px 0 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Hide normal properties content as panel is now narrow/icon-only style */
+.properties-panel h3,
+.properties-panel .prop-item,
+.properties-panel .placeholder-text {
+    display: none;
+}
+
+/* Ensure the Name/Header in panel is visible but small or rotated */
+.properties-panel .glowing-text {
+    font-size: 0.7rem;
+    padding: 2px;
+    margin-top: 10px;
+    width: 90%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    /* Vertical text or just small wrapping */
+    word-wrap: break-word;
+}
+
+/* Big Print Button Style */
+#btn-print {
+    width: 65px;
+    height: 65px;
+    font-size: 2.2rem;
+    background: #0f172a;
+    color: #00eaff;
+    border-radius: 18px;
+    border: 3px solid #00eaff;
+    box-shadow: 0 0 20px rgba(0, 234, 255, 0.5);
+    margin-bottom: 25px;
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    text-shadow: 0 0 10px #00eaff;
+}
+
+#btn-print:hover {
+    transform: scale(1.1) rotate(5deg);
+    background: #00eaff;
+    color: #0f172a;
+    box-shadow: 0 0 40px #00eaff;
+}
+
+@keyframes glow-pulse-btn {
+    0% {
+        box-shadow: 0 0 5px var(--primary-color);
+    }
+
+    100% {
+        box-shadow: 0 0 20px var(--primary-color), 0 0 10px white;
+    }
+}
+
+.properties-panel h3 {
+    margin-bottom: 20px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: white;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    /* Removed original placeholder because we added specific content above */
+    color: rgba(255, 255, 255, 0.7);
+    text-align: center;
+    margin-top: 50px;
+    font-style: italic;
+}
+
+.prop-item label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.prop-item textarea {
+    border: none;
+    border-radius: 6px;
+    padding: 8px;
+    background: rgba(255, 255, 255, 0.95);
+    color: #333;
+}
+
+/* =========================================
+   Responsive Design
+   ========================================= */
+
+/* =========================================
+   Autocomplete Suggestions
+   ========================================= */
+.suggestion-box {
+    position: absolute;
+    background: white;
+    border: 2px solid var(--primary-color);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    max-height: 250px;
+    overflow-y: auto;
+    width: 250px;
+    z-index: 9999;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-family: 'Inter', sans-serif;
+    display: none;
+}
+
+.suggestion-item {
+    padding: 10px 15px;
+    cursor: pointer;
+    color: #1f2937;
+    border-bottom: 1px solid #f3f4f6;
+    font-weight: 500;
+}
+
+.suggestion-item:last-child {
+    border-bottom: none;
+}
+
+.suggestion-item:hover,
+.suggestion-item.active {
+    background: var(--primary-color);
+    color: white;
+}
+
+.status-group {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+/* Responsive Design */
+/* Tablet & Smaller Desktop */
+@media (max-width: 1024px) {
+    :root {
+        --properties-width: 240px;
+        --sidebar-width: 60px;
+    }
+
+    .app-title {
+        font-size: 1.5rem;
+    }
+}
+
+/* Mobile Devices */
+@media (max-width: 768px) {
+    .app-container {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        border-width: 0;
+        /* Remove heavy border on small screens to save space */
+    }
+
+    /* Ticker / Header */
+    .app-header {
+        height: 50px;
+        flex-shrink: 0;
+    }
+
+    .doc-name {
+        font-size: 1.2rem;
+    }
+
+    .doc-title {
+        display: none;
+        /* Hide long subtitle on mobile */
+    }
+
+    /* Main Workspace Area */
+    .workspace {
+        flex: 1;
+        height: auto;
+        overflow: hidden;
+        /* Canvas container handles scroll */
+    }
+
+    /* Toolbar collapses to scrollable row */
+    .toolbar {
+        overflow-x: auto;
+        padding: 0 10px;
+        height: 50px;
+        flex-shrink: 0;
+    }
+
+    /* Sidebar becomes Bottom Navigation */
+    .sidebar {
+        flex-direction: row;
+        width: 100%;
+        height: 60px;
+        padding: 0 10px;
+        box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+        border-right: none;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        justify-content: space-between;
+        order: 3;
+        /* Move to bottom */
+    }
+
+    .logo-area {
+        display: none;
+        /* Hide logo on mobile bottom bar */
+    }
+
+    .nav-menu {
+        flex-direction: row;
+        width: auto;
+        gap: 5px;
+    }
+
+    .bottom-actions {
+        flex-direction: row;
+        margin-top: 0;
+        gap: 5px;
+    }
+
+    .theme-picker {
+        display: none;
+        /* Hide theme picker on mobile to save space, or move into settings */
+    }
+
+    /* Properties Panel - Hidden by default or absolute over content */
+    .properties-panel {
+        display: none;
+        /* Simplification for small screens, or we can make it a slide-over */
+        position: absolute;
+        right: 0;
+        top: 50px;
+        bottom: 60px;
+        width: 80%;
+        z-index: 100;
+    }
+
+    .properties-panel.active {
+        display: block;
+    }
+}
+
+/* =========================================
+   Modal Styles
+   ========================================= */
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+}
+
+.modal-backdrop:not(.hidden) {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modal-backdrop.hidden {
+    display: none;
+}
+
+.modal-content {
+    background: var(--bg-panel);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: var(--shadow-lg);
+    width: 90%;
+    max-width: 500px;
+    border-radius: 12px;
+    padding: 20px;
+    color: var(--text-main);
+    transform: translateY(20px);
+    transition: transform 0.3s;
+}
+
+.modal-backdrop:not(.hidden) .modal-content {
+    transform: translateY(0);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 10px;
+}
+
+.modal-header h2 {
+    font-size: 1.2rem;
+    color: white;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    color: #94a3b8;
+    font-size: 1.2rem;
+    cursor: pointer;
+}
+
+.close-btn:hover {
+    color: #f87171;
+}
+
+.modal-btn {
+    padding: 5px 15px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.modal-btn.primary {
+    background: var(--primary-color);
+    color: white;
+}
+
+.templates-list {
+    max-height: 300px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.template-item {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 10px;
+    border-radius: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid transparent;
+}
+
+.template-item:hover {
+    border-color: var(--primary-color);
+}
+
+.template-info h4 {
+    margin-bottom: 4px;
+    color: white;
+    font-size: 0.95rem;
+}
+
+.template-info span {
+    font-size: 0.8rem;
+    color: #94a3b8;
+}
+
+.template-actions {
+    display: flex;
+    gap: 5px;
+}
+
+/* Backup Modal Styles */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+}
+
+.modal-overlay:not(.hidden) {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.backup-card-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.backup-card-btn:active {
+    transform: translateY(0);
+}
+
+/* Database Modal Styles */
+.tab-btn {
+    padding: 10px 25px;
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s;
+    border-bottom: 3px solid transparent;
+}
+
+.tab-btn:hover {
+    color: white;
+}
+
+.tab-btn.active {
+    color: #3b82f6;
+    border-bottom-color: #3b82f6;
+}
+
+.tab-content.hidden {
+    display: none !important;
+}
+
+.tab-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: dbFadeIn 0.3s ease;
+}
+
+@keyframes dbFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.db-item-pill {
+    transition: all 0.2s;
+}
+
+.db-item-pill:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+}
