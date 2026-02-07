@@ -65,7 +65,11 @@ class PatientDocuments {
             cloudUrl: null
         };
 
+<<<<<<< HEAD
         this.documents[patientId].unshift(doc);
+=======
+        this.documents[patientId].unshift(doc); // Add to beginning for immediate visibility
+>>>>>>> 096b4003d49e4534b8f534e1081d7cfe568c02bf
         this.saveDocuments();
 
         // --- Cloud Sync: Firebase Storage ---
@@ -75,6 +79,7 @@ class PatientDocuments {
                 const snapshot = await storageRef.put(documentData.blob);
                 const downloadURL = await snapshot.ref.getDownloadURL();
 
+<<<<<<< HEAD
                 const savedDoc = this.documents[patientId].find(d => d.id === doc.id);
                 if (savedDoc) {
                     savedDoc.cloudUrl = downloadURL;
@@ -84,6 +89,19 @@ class PatientDocuments {
                 this.saveDocuments();
                 console.log("Documents Sync: Cloud storage upload success.");
 
+=======
+                // Update the actual object in the array
+                const savedDoc = this.documents[patientId].find(d => d.id === doc.id);
+                if (savedDoc) {
+                    savedDoc.cloudUrl = downloadURL;
+                    savedDoc.fileData = null; // Purge base64 only after cloud link is confirmed
+                }
+
+                this.saveDocuments();
+                console.log("Documents Sync: Cloud storage upload success and local data updated.");
+
+                // Trigger a UI update if the patient file is open
+>>>>>>> 096b4003d49e4534b8f534e1081d7cfe568c02bf
                 if (window.patientFileUI && window.patientFileUI.currentPatientId === patientId) {
                     window.patientFileUI.renderDocuments();
                 }
