@@ -102,9 +102,7 @@ class PatientFileUI {
     }
 
     renderDocuments() {
-        if (!window.patientDocuments) return;
-
-        const grid = document.getElementById('patient-docs-grid');
+        const grid = document.getElementById('file-docs-grid');
         if (!grid) return;
 
         const docs = window.patientDocuments.getPatientDocuments(this.currentPatientId);

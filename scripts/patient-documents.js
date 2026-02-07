@@ -40,9 +40,9 @@ class PatientDocuments {
             id: 'doc-' + Date.now(),
             patientId: patientId,
             name: documentData.name,
-            type: documentData.type, // 'xray', 'ct', 'mri', 'lab', 'report', 'other'
+            type: documentData.type,
             category: this.getCategoryFromType(documentData.type),
-            fileData: documentData.fileData, // Base64 encoded (backup/offline)
+            fileData: documentData.fileData,
             mimeType: documentData.mimeType,
             uploadDate: new Date().toISOString(),
             notes: documentData.notes || '',
@@ -50,7 +50,7 @@ class PatientDocuments {
             cloudUrl: null
         };
 
-        this.documents[patientId].push(doc);
+        this.documents[patientId].unshift(doc); // Add to beginning for immediate visibility
         this.saveDocuments();
 
         // --- Cloud Sync: Firebase Storage ---
@@ -69,6 +69,11 @@ class PatientDocuments {
 
                 this.saveDocuments();
                 console.log("Documents Sync: Cloud storage upload success and local data updated.");
+
+                // Trigger a UI update if the patient file is open
+                if (window.patientFileUI && window.patientFileUI.currentPatientId === patientId) {
+                    window.patientFileUI.renderDocuments();
+                }
             } catch (err) {
                 console.error("Documents Sync: Failed to upload to cloud storage.", err);
             }
