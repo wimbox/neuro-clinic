@@ -618,6 +618,26 @@ class SyncManager {
         return false;
     }
 
+    masterFactoryReset() {
+        console.warn("SyncManager: Initiating Master Factory Reset...");
+
+        // Reset core data collections
+        this.data.patients = [];
+        this.data.appointments = [];
+        this.data.finances.transactions = [];
+        this.data.finances.ledger = {};
+        this.data.logs = [];
+
+        // Critically reset the patient code counter to 100
+        this.data.settings.lastPatientCode = 100;
+
+        // Save and Sync
+        this.saveLocal();
+        this.notifyDataChanged();
+        console.log("SyncManager: Master Factory Reset completed. Counter reset to 100.");
+        return true;
+    }
+
     changeUserPassword(userId, newPassword) {
         const currentUser = window.authManager?.currentUser?.username || 'System';
         const user = this.data.users.find(u => u.id === userId);

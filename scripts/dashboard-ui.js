@@ -1764,6 +1764,15 @@ class DashboardUI {
                             <i class="fa-solid fa-cloud-arrow-up"></i> رفع البيانات للسحاب الآن
                         </button>
                     </div>
+
+                    <!-- Master Factory Reset Button -->
+                    <div style="margin-top: 30px; padding: 20px; border: 2px solid #ef4444; border-radius: 20px; background: rgba(239, 68, 68, 0.05); text-align: center;">
+                        <h4 style="color: #ef4444; margin-bottom: 10px;"><i class="fa-solid fa-triangle-exclamation"></i> منطقة الخطر: ضبط مصنع شامل</h4>
+                        <p style="color: #94a3b8; font-size: 0.85rem; margin-bottom: 20px;">هذا الزر سيحذف جميع المرضى والعمليات المالية ويبدأ العداد من 101. يتطلب كلمة سر المدير.</p>
+                        <button onclick="window.dashboardUI.triggerMasterReset()" class="btn-neuro" style="background: #ef4444; border-color: #ef4444; color: #fff; margin: 0 auto; box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);">
+                            <i class="fa-solid fa-trash-can-arrow-up"></i> تصفير النظام والبدء من #101#
+                        </button>
+                    </div>
                     ` : ''}
                 </div>
 
@@ -1956,6 +1965,45 @@ class DashboardUI {
             btn.style.background = '';
             btn.innerHTML = originalHTML;
         }, 3000);
+    }
+
+    triggerMasterReset() {
+        const modalHTML = `
+            <div style="text-align: right; direction: rtl;">
+                <div style="background: rgba(239, 68, 68, 0.1); border: 1px dashed #ef4444; padding: 15px; border-radius: 12px; margin-bottom: 20px;">
+                    <p style="color: #ef4444; font-weight: 800; margin-bottom: 10px;">
+                        <i class="fa-solid fa-triangle-exclamation"></i> تحذير أمني شديد الخطورة!
+                    </p>
+                    <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6;">
+                        أنت على وشك <strong>حذف كافة بيانات العيادة نهائياً</strong>. 
+                        سيتم مسح جميع المرضى، المواعيد، والماليات، وسيعود العداد للرقم 101.
+                    </p>
+                </div>
+                
+                <label style="display: block; color: #fff; margin-bottom: 8px; font-weight: 600;">كلمة مرور المدير للتأكيد (Master Password):</label>
+                <input type="password" id="master-reset-pass" class="neuro-input" 
+                       style="width: 100%; border-color: #ef4444; box-shadow: 0 0 10px rgba(239, 68, 68, 0.1);" 
+                       placeholder="********" autofocus>
+            </div>
+        `;
+
+        window.showNeuroModal('تحذير نهائي: مسح البيانات', modalHTML, () => {
+            const pass = document.getElementById('master-reset-pass').value;
+
+            if (pass === 'admin123') {
+                const success = syncManager.masterFactoryReset();
+                if (success) {
+                    window.showNeuroToast('تم تصفير النظام بنجاح! العداد سيبدأ من 101.', 'success');
+                    window.soundManager?.playSuccess();
+                    setTimeout(() => window.location.reload(), 2000);
+                    return true;
+                }
+            } else {
+                window.showNeuroToast('كلمة المرور غير صحيحة! تم إلغاء العملية.', 'error');
+                window.soundManager?.playError();
+                return false;
+            }
+        }, true);
     }
 }
 
