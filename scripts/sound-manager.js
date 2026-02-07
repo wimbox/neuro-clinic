@@ -49,6 +49,46 @@ class SoundManager {
         osc.stop(this.ctx.currentTime + 0.4);
     }
 
+    playDeleteWarning() {
+        if (!this.enabled) return;
+        this.init();
+        const now = this.ctx.currentTime;
+
+        // "TERRIFYING" ALARM SOUND
+        // A harsh, screeching dissonant blast
+
+        // Oscillator 1: The Screech
+        const osc1 = this.ctx.createOscillator();
+        const gain1 = this.ctx.createGain();
+        osc1.type = 'square'; // Square wave is harshest
+        osc1.frequency.setValueAtTime(800, now);
+        osc1.frequency.exponentialRampToValueAtTime(200, now + 0.3); // Rapid drop
+
+        gain1.gain.setValueAtTime(0.4, now); // Loud!
+        gain1.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+
+        osc1.connect(gain1);
+        gain1.connect(this.ctx.destination);
+
+        // Oscillator 2: The Dissonance (Tritone interval)
+        const osc2 = this.ctx.createOscillator();
+        const gain2 = this.ctx.createGain();
+        osc2.type = 'sawtooth';
+        osc2.frequency.setValueAtTime(1150, now); // Dissonant high pitch
+        osc2.frequency.exponentialRampToValueAtTime(300, now + 0.3);
+
+        gain2.gain.setValueAtTime(0.3, now);
+        gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+
+        osc2.connect(gain2);
+        gain2.connect(this.ctx.destination);
+
+        osc1.start();
+        osc2.start();
+        osc1.stop(now + 0.3);
+        osc2.stop(now + 0.3);
+    }
+
     playSuccess() {
         if (!this.enabled) return;
         this.init();

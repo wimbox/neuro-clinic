@@ -11,20 +11,35 @@ class PatientDocuments {
      * Load documents from localStorage
      */
     loadDocuments() {
-        if (window.syncManager?.data?.patientDocs) return window.syncManager.data.patientDocs;
-        const data = localStorage.getItem('neuro-patient-documents');
-        return data ? JSON.parse(data) : {};
+        try {
+            if (window.syncManager?.data?.patientDocs) return window.syncManager.data.patientDocs;
+            const data = localStorage.getItem('neuro-patient-documents');
+            return data ? JSON.parse(data) : {};
+        } catch (e) {
+            console.error("Error loading documents:", e);
+            return {}; // Fallback to empty object to prevent crash
+        }
     }
 
     /**
      * Save documents to localStorage
      */
     saveDocuments() {
-        if (window.syncManager) {
-            window.syncManager.data.patientDocs = this.documents;
-            window.syncManager.saveLocal();
-        } else {
-            localStorage.setItem('neuro-patient-documents', JSON.stringify(this.documents));
+        try {
+            if (window.syncManager) {
+                window.syncManager.data.patientDocs = this.documents;
+                // Attempt to save to SyncManager (which saves to LocalStorage)
+                try {
+                    window.syncManager.saveLocal();
+                } catch (e) {
+                    console.warn("Storage Quota Exceeded (SyncManager): Continuing in-memory...", e);
+                    // System continues; data is safe in memory and will be synced to cloud
+                }
+            } else {
+                localStorage.setItem('neuro-patient-documents', JSON.stringify(this.documents));
+            }
+        } catch (e) {
+            console.warn("Storage Quota Exceeded (Direct): Continuing in-memory...", e);
         }
     }
 
@@ -40,47 +55,46 @@ class PatientDocuments {
             id: 'doc-' + Date.now(),
             patientId: patientId,
             name: documentData.name,
-            type: documentData.type, // 'xray', 'ct', 'mri', 'lab', 'report', 'other'
+            type: documentData.type,
             category: this.getCategoryFromType(documentData.type),
-            fileData: documentData.fileData, // Base64 encoded (backup/offline)
+            fileData: documentData.fileData,
             mimeType: documentData.mimeType,
             uploadDate: new Date().toISOString(),
             notes: documentData.notes || '',
             size: documentData.size || 0,
-            cloudUrl: null // Will be filled if successfully uploaded to Firebase
+            cloudUrl: null
         };
+
+        this.documents[patientId].unshift(doc);
+        this.saveDocuments();
 
         // --- Cloud Sync: Firebase Storage ---
         if (typeof storage !== 'undefined' && storage && documentData.blob) {
             try {
-                console.log("Documents Sync: Uploading to cloud storage...");
                 const storageRef = storage.ref(`documents/${patientId}/${doc.id}`);
                 const snapshot = await storageRef.put(documentData.blob);
                 const downloadURL = await snapshot.ref.getDownloadURL();
-                doc.cloudUrl = downloadURL;
 
-                // --- Smart Link Logic ---
-                // Purge local base64 to save local storage space (avoid 5MB browser limit)
-                // Now only the cloud URL resides in local memory.
-                doc.fileData = null;
-                console.log("Documents Sync: Success. Local storage purged, using smart link.");
+                const savedDoc = this.documents[patientId].find(d => d.id === doc.id);
+                if (savedDoc) {
+                    savedDoc.cloudUrl = downloadURL;
+                    savedDoc.fileData = null;
+                }
+
+                this.saveDocuments();
+                console.log("Documents Sync: Cloud storage upload success.");
+
+                if (window.patientFileUI && window.patientFileUI.currentPatientId === patientId) {
+                    window.patientFileUI.renderDocuments();
+                }
             } catch (err) {
                 console.error("Documents Sync: Failed to upload to cloud storage.", err);
             }
         }
 
-        this.documents[patientId].push(doc);
-        this.saveDocuments();
-
-        // Also trigger general sync since the patients data might have links
-        if (window.syncManager) window.syncManager.saveLocal();
-
         return doc;
     }
 
-    /**
-     * Get category icon and label from type
-     */
     getCategoryFromType(type) {
         const categories = {
             'xray': { icon: 'fa-x-ray', label: 'أشعة X-Ray', color: '#3b82f6' },
@@ -93,24 +107,10 @@ class PatientDocuments {
         return categories[type] || categories['other'];
     }
 
-    /**
-     * Get all documents for a patient
-     */
     getPatientDocuments(patientId) {
         return this.documents[patientId] || [];
     }
 
-    /**
-     * Get documents filtered by type
-     */
-    getDocumentsByType(patientId, type) {
-        const docs = this.getPatientDocuments(patientId);
-        return docs.filter(d => d.type === type);
-    }
-
-    /**
-     * Delete document
-     */
     deleteDocument(patientId, documentId) {
         if (this.documents[patientId]) {
             this.documents[patientId] = this.documents[patientId].filter(d => d.id !== documentId);
@@ -120,33 +120,10 @@ class PatientDocuments {
         return false;
     }
 
-    /**
-     * Get document by ID
-     */
     getDocument(patientId, documentId) {
         const docs = this.getPatientDocuments(patientId);
         return docs.find(d => d.id === documentId);
     }
-
-    /**
-     * Get total storage size for a patient (in bytes)
-     */
-    getStorageSize(patientId) {
-        const docs = this.getPatientDocuments(patientId);
-        return docs.reduce((total, doc) => total + (doc.size || 0), 0);
-    }
-
-    /**
-     * Format file size
-     */
-    formatSize(bytes) {
-        if (bytes === 0) return '0 Bytes';
-        const k = 1024;
-        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
-    }
 }
 
-// Global instance
 window.patientDocuments = new PatientDocuments();
