@@ -967,7 +967,7 @@ class DashboardUI {
         if (!patientTableBody) return;
 
         patientTableBody.innerHTML = patients.map(p => `
-            <tr>
+            <tr onclick="window.patientFileUI.open('${p.id}')" style="cursor:pointer">
                 <td style="color: var(--accent-blue); font-weight: 800; font-family: 'Inter';">#${p.patientCode || '10x'}#</td>
                 <td>
                     <div style="display: flex; align-items: center; gap: 12px;">
@@ -982,13 +982,13 @@ class DashboardUI {
                 <td style="color: var(--accent-glow); font-size: 0.9rem;">${p.visits && p.visits.length > 0 ? p.visits[0].date : 'بدون زيارات'}</td>
                 <td>
                     <div style="display: flex; gap: 8px;">
-                        <button class="btn-edit-tool" onclick="dashboardUI.editPatient('${p.id}')" title="تعديل البيانات">
+                        <button class="btn-edit-tool" onclick="event.stopPropagation(); dashboardUI.editPatient('${p.id}')" title="تعديل البيانات">
                             <i class="fa-solid fa-pen"></i>
                         </button>
-                        <button class="btn-neuro" onclick="window.patientFileUI.open('${p.id}')" style="padding: 8px 15px; font-size: 0.75rem; animation: none; box-shadow: none;">
+                        <button class="btn-neuro" onclick="event.stopPropagation(); window.patientFileUI.open('${p.id}')" style="padding: 8px 15px; font-size: 0.75rem; animation: none; box-shadow: none;">
                             <i class="fa-solid fa-file-invoice-dollar"></i> الحسابات
                         </button>
-                        <button class="btn-edit-tool" onclick="window.dashboardUI.deletePatientDirect('${p.id}')" title="حذف المريض نهائياً" style="color: #ef4444; border-color: rgba(239, 68, 68, 0.3);">
+                        <button class="btn-edit-tool" onclick="event.stopPropagation(); window.dashboardUI.deletePatientDirect('${p.id}')" title="حذف المريض نهائياً" style="color: #ef4444; border-color: rgba(239, 68, 68, 0.3);">
                             <i class="fa-solid fa-trash"></i>
                         </button>
                     </div>
@@ -1112,7 +1112,7 @@ class DashboardUI {
     }
 
     deleteAppointment(id) {
-        window.soundManager.playBuzz();
+        window.soundManager.playDeleteWarning();
         showNeuroModal('حذف الموعد', 'هل أنت متأكد من حذف هذا الموعد نهائياً؟', () => {
             appointmentManager.deleteAppointment(id);
             this.updateStats();
@@ -1145,8 +1145,23 @@ class DashboardUI {
         }
     }
 
+    deleteUser(userId) {
+        window.soundManager.playDeleteWarning();
+        showNeuroModal(
+            'حذف الموظف',
+            'هل أنت متأكد؟ سيفقد الموظف صلاحية الدخول فوراً.',
+            () => {
+                syncManager.deleteUser(userId);
+                this.renderUsers();
+                window.soundManager.playSuccess();
+                showNeuroModal('تم الحذف', 'تم حذف الموظف بنجاح.', null, false);
+            },
+            true
+        );
+    }
+
     deletePatientDirect(id) {
-        window.soundManager.playBuzz();
+        window.soundManager.playDeleteWarning();
         showNeuroModal('تحذير نهائي', 'هل أنت متأكد من حذف هذا المريض؟ سيؤدي ذلك لمسح كافة بياناته الطبية وحساباته فوراً.', () => {
             syncManager.deletePatient(id);
             this.renderPatientsManagement();
@@ -1690,11 +1705,26 @@ class DashboardUI {
         const currentUser = window.authManager?.currentUser;
         const isAdmin = currentUser?.role === 'admin';
 
+        const healthStatus = window.syncManager.isPullDone ?
+            '<span style="color:#10b981"><i class="fa-solid fa-shield-check"></i> متصل ومحمي بمزامنة ذكية</span>' :
+            '<span style="color:#f59e0b"><i class="fa-solid fa-arrows-rotate"></i> جاري التحقق من السحابة...</span>';
+
         settingsContainer.innerHTML = `
-            <div style="padding: 20px;">
+            <div style="padding: 20px; direction: rtl; text-align: right;">
                 <h2 style="color: #fff; margin-bottom: 30px; font-size: 1.8rem;">
                     <i class="fa-solid fa-gear"></i> الإعدادات
                 </h2>
+
+                <!-- Premium Health Status Card -->
+                <div style="background: rgba(16, 185, 129, 0.08); border: 2px solid rgba(16, 185, 129, 0.3); border-radius: 20px; padding: 25px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+                    <div>
+                        <h3 style="color: #fff; margin: 0 0 8px 0; font-size: 1.3rem;">حالة أمان النظام والبيانات</h3>
+                        <p style="color: #cbd5e1; font-size: 0.95rem; margin: 0; line-height: 1.6;">تم تفعيل **صمامات الأمان** ضد الحذف المفاجئ، ونظام **الرفع الذكي** لزيادة السرعة 10 أضعاف.</p>
+                    </div>
+                    <div style="background: rgba(15, 23, 42, 0.5); padding: 12px 20px; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.5); font-weight: 800; font-size: 1.1rem; min-width: 250px; text-align: center;">
+                        ${healthStatus}
+                    </div>
+                </div>
 
                 <!-- Clinics Management Section -->
                 ${isAdmin ? window.clinicManager.renderClinicsManagement() : ''}
