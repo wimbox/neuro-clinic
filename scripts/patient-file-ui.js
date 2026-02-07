@@ -126,7 +126,7 @@ class PatientFileUI {
                     <div style="text-align: center; margin-bottom: 10px;">
                         <i class="fa-solid ${cat.icon}" style="font-size: 2rem; color: ${cat.color};"></i>
                     </div>
-                    <h4 style="color: #e2e8f0; font-size: 0.9rem; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 5px;" title="${doc.name}"></h4>
+                    <h4 style="color: #e2e8f0; font-size: 0.9rem; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 5px;" title="${doc.name}">${doc.name}</h4>
                     <p style="color: #94a3b8; font-size: 0.75rem; text-align: center;">${new Date(doc.uploadDate).toLocaleDateString()}</p>
                     
                     <div style="display: flex; gap: 5px; justify-content: center; margin-top: 10px;">
@@ -256,14 +256,9 @@ class PatientFileUI {
         window.soundManager.playSuccess();
         window.showNeuroToast('تم الحفظ بنجاح (الرابط السحابي الذكي)');
 
-<<<<<<< HEAD
         // Final cleanup
         this.lastUploadedFile = null;
         this.pendingFileData = null;
-=======
-        // Final cleanup of the blob from memory
-        this.lastUploadedFile = null;
->>>>>>> 9c77bffca65a641bcff02ff8137c7c1d7f1bced6
     }
 
     deleteDocument(docId) {
@@ -554,3 +549,6 @@ class PatientFileUI {
 }
 
 window.patientFileUI = new PatientFileUI();
+
+// --- Final Verification: Smart-Sync & Image Compression Engine Active (v2.0.1) ---
+// Securely optimized for Neuro-Clinic
