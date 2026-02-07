@@ -53,19 +53,18 @@ class PatientDocuments {
         // --- Cloud Sync: Firebase Storage ---
         if (typeof storage !== 'undefined' && storage && documentData.blob) {
             try {
-                console.log("Documents Sync: Uploading to cloud storage...");
                 const storageRef = storage.ref(`documents/${patientId}/${doc.id}`);
                 const snapshot = await storageRef.put(documentData.blob);
                 const downloadURL = await snapshot.ref.getDownloadURL();
                 doc.cloudUrl = downloadURL;
 
-                // --- Smart Link Logic ---
-                // Purge local base64 to save local storage space (avoid 5MB browser limit)
-                // Now only the cloud URL resides in local memory.
+                // --- CRITICAL OPTIMIZATION ---
+                // Purge base64 immediately to prevent crashing the sync system with large strings
                 doc.fileData = null;
-                console.log("Documents Sync: Success. Local storage purged, using smart link.");
+                console.log("Documents Sync: Cloud storage upload success. Master JSON optimized.");
             } catch (err) {
                 console.error("Documents Sync: Failed to upload to cloud storage.", err);
+                // Keep fileData only if cloud upload failed as a fallback
             }
         }
 

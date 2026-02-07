@@ -75,6 +75,8 @@ class PatientFileUI {
         if (!patient) return;
 
         this.currentPatientId = patientId;
+        this.lastUploadedFile = null;
+        this.pendingFileData = null; // New: Store base64 outside the DOM
 
         // Populate basic info
         document.getElementById('file-patient-name').textContent = `${patient.name}`;
@@ -124,7 +126,7 @@ class PatientFileUI {
                     <div style="text-align: center; margin-bottom: 10px;">
                         <i class="fa-solid ${cat.icon}" style="font-size: 2rem; color: ${cat.color};"></i>
                     </div>
-                    <h4 style="color: #e2e8f0; font-size: 0.9rem; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 5px;" title="${doc.name}">${doc.name}</h4>
+                    <h4 style="color: #e2e8f0; font-size: 0.9rem; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 5px;" title="${doc.name}"></h4>
                     <p style="color: #94a3b8; font-size: 0.75rem; text-align: center;">${new Date(doc.uploadDate).toLocaleDateString()}</p>
                     
                     <div style="display: flex; gap: 5px; justify-content: center; margin-top: 10px;">
@@ -141,67 +143,122 @@ class PatientFileUI {
     }
 
     handleFileUpload(file) {
-        if (file.size > 5 * 1024 * 1024) { // 5MB limit
-            showNeuroModal('خطأ', 'حجم الملف كبير جداً. الحد الأقصى 5 ميجابايت.', null, false);
-            return;
-        }
+        // Use immediate object URL for faster processing instead of heavy DataURL if possible
+        const objectUrl = URL.createObjectURL(file);
 
-        this.lastUploadedFile = file; // Store blob for confirmUpload
+        // If it's an image, compress it first
+        if (file.type.startsWith('image/')) {
+            window.showNeuroToast('جاري ضغط الصورة لزيادة سرعة الرفع..', 'info');
+            this.compressImage(file, (compressedBlob) => {
+                this.lastUploadedFile = compressedBlob;
+                const reader = new FileReader();
+                reader.onload = (re) => {
+                    this.pendingFileData = re.target.result; // Store here, not in HTML
+                    this.showCategorySelector(file.name, compressedBlob.size);
+                    URL.revokeObjectURL(objectUrl);
+                };
+                reader.readAsDataURL(compressedBlob);
+            });
+        } else {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                this.lastUploadedFile = file;
+                this.pendingFileData = e.target.result; // Store here
+                this.showCategorySelector(file.name, file.size);
+                URL.revokeObjectURL(objectUrl);
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    compressImage(file, callback) {
         const reader = new FileReader();
         reader.onload = (e) => {
-            const base64 = e.target.result;
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
 
-            // Determine type based on extension or ask user? 
-            // For simplicity, we'll ask user via simple modal or default to 'other'
-            // Here let's show a modal to pick category
+                // Max dimensions for medical images (high enough for detail, small enough for speed)
+                const MAX_WIDTH = 1600;
+                const MAX_HEIGHT = 1600;
 
-            const categoryHTML = `
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; text-align: center;">
-                    <button class="btn-neuro" onclick="window.patientFileUI.confirmUpload('${file.name}', 'xray', '${base64}', ${file.size})" style="justify-content: center;">أشعة X-Ray</button>
-                    <button class="btn-neuro" onclick="window.patientFileUI.confirmUpload('${file.name}', 'mri', '${base64}', ${file.size})" style="justify-content: center;">RM (MRI)</button>
-                    <button class="btn-neuro" onclick="window.patientFileUI.confirmUpload('${file.name}', 'ct', '${base64}', ${file.size})" style="justify-content: center;">أشعة مقطعية</button>
-                    <button class="btn-neuro" onclick="window.patientFileUI.confirmUpload('${file.name}', 'lab', '${base64}', ${file.size})" style="justify-content: center;">تحليل معملي</button>
-                    <button class="btn-neuro" onclick="window.patientFileUI.confirmUpload('${file.name}', 'report', '${base64}', ${file.size})" style="justify-content: center;">تقرير طبي</button>
-                    <button class="btn-neuro" onclick="window.patientFileUI.confirmUpload('${file.name}', 'other', '${base64}', ${file.size})" style="justify-content: center;">أخرى</button>
-                </div>
-            `;
+                if (width > height) {
+                    if (width > MAX_WIDTH) {
+                        height *= MAX_WIDTH / width;
+                        width = MAX_WIDTH;
+                    }
+                } else {
+                    if (height > MAX_HEIGHT) {
+                        width *= MAX_HEIGHT / height;
+                        height = MAX_HEIGHT;
+                    }
+                }
 
-            showNeuroModal('تصنيف الملف', 'الرجاء اختيار نوع المستند:', null, false);
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
 
-            // Fix: Target the correct element classes from DashboardUI
-            const modalMsg = document.querySelector('.neuro-modal-msg');
-            if (modalMsg) {
-                // Style the container for better appearance
-                modalMsg.style.marginTop = '20px';
-                modalMsg.innerHTML = categoryHTML;
-            }
-
-            // Hide the default confirm/cancel buttons since we have category buttons
-            const actions = document.querySelector('.neuro-modal-actions');
-            if (actions) actions.style.display = 'none';
+                // Compress as JPEG at 0.7 quality (excellent balance for X-rays)
+                canvas.toBlob((blob) => {
+                    callback(blob);
+                }, 'image/jpeg', 0.7);
+            };
+            img.src = e.target.result;
         };
         reader.readAsDataURL(file);
     }
 
-    async confirmUpload(name, type, data, size) {
-        // Close modal using the correct overlay class
+    showCategorySelector(name, size) {
+        // We no longer pass 'data' (the huge string) through these buttons
+        const categoryHTML = `
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; text-align: center;">
+                <button class="btn-neuro" onclick="window.patientFileUI.confirmUpload('${name}', 'xray', ${size})" style="justify-content: center;">أشعة X-Ray</button>
+                <button class="btn-neuro" onclick="window.patientFileUI.confirmUpload('${name}', 'mri', ${size})" style="justify-content: center;">RM (MRI)</button>
+                <button class="btn-neuro" onclick="window.patientFileUI.confirmUpload('${name}', 'ct', ${size})" style="justify-content: center;">أشعة مقطعية</button>
+                <button class="btn-neuro" onclick="window.patientFileUI.confirmUpload('${name}', 'lab', ${size})" style="justify-content: center;">تحليل معملي</button>
+                <button class="btn-neuro" onclick="window.patientFileUI.confirmUpload('${name}', 'report', ${size})" style="justify-content: center;">تقرير طبي</button>
+                <button class="btn-neuro" onclick="window.patientFileUI.confirmUpload('${name}', 'other', ${size})" style="justify-content: center;">أخرى</button>
+            </div>
+        `;
+
+        showNeuroModal('تصنيف الملف', 'تم ضغط الصورة بنجاح. اختر نوع المستند للرفع الفوري:', null, false);
+        const modalMsg = document.querySelector('.neuro-modal-msg');
+        if (modalMsg) {
+            modalMsg.style.marginTop = '20px';
+            modalMsg.innerHTML = categoryHTML;
+        }
+        const actions = document.querySelector('.neuro-modal-actions');
+        if (actions) actions.style.display = 'none';
+    }
+
+    async confirmUpload(name, type, size) {
+        // Close modal
         const overlay = document.querySelector('.neuro-modal-overlay');
         if (overlay) overlay.remove();
 
-        window.showNeuroToast('جاري رفع المستند للسحاب.. يرجى الانتظار', 'info');
+        window.showNeuroToast('جاري الرفع المباشر للسحابة..', 'info');
+
+        const data = this.pendingFileData; // Get the huge string from memory, not DOM
 
         await window.patientDocuments.addDocument(this.currentPatientId, {
             name: name,
             type: type,
             fileData: data,
-            blob: this.lastUploadedFile, // Pass blob for Firebase Storage
+            blob: this.lastUploadedFile,
             mimeType: data.split(';')[0].split(':')[1],
             size: size
         });
 
         this.renderDocuments();
         window.soundManager.playSuccess();
-        window.showNeuroToast('تم الحفظ بالرابط السحابي الذكي');
+        window.showNeuroToast('تم الحفظ بنجاح (الرابط السحابي الذكي)');
+
+        // Final cleanup
+        this.lastUploadedFile = null;
+        this.pendingFileData = null;
     }
 
     deleteDocument(docId) {
