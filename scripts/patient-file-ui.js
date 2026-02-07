@@ -28,11 +28,7 @@ class PatientFileUI {
 
         this.currentPatientId = patientId;
         this.lastUploadedFile = null;
-<<<<<<< HEAD
         this.pendingFileData = null;
-=======
-        this.pendingFileData = null; // New: Store base64 outside the DOM
->>>>>>> 096b4003d49e4534b8f534e1081d7cfe568c02bf
 
         document.getElementById('file-patient-name').textContent = `${patient.name}`;
 
@@ -56,12 +52,8 @@ class PatientFileUI {
     }
 
     renderDocuments() {
-<<<<<<< HEAD
         // Find grid by both possible IDs to ensure compatibility
         const grid = document.getElementById('patient-docs-grid') || document.getElementById('file-docs-grid');
-=======
-        const grid = document.getElementById('file-docs-grid');
->>>>>>> 096b4003d49e4534b8f534e1081d7cfe568c02bf
         if (!grid) return;
 
         const docs = window.patientDocuments.getPatientDocuments(this.currentPatientId);
@@ -98,7 +90,6 @@ class PatientFileUI {
     }
 
     handleFileUpload(file) {
-<<<<<<< HEAD
         if (file.type.startsWith('image/')) {
             window.showNeuroToast('جاري ضغط الصورة لزيادة السرعة..', 'info');
             this.compressImage(file, (compressedBlob) => {
@@ -121,36 +112,6 @@ class PatientFileUI {
         }
     }
 
-=======
-        // Use immediate object URL for faster processing instead of heavy DataURL if possible
-        const objectUrl = URL.createObjectURL(file);
-
-        // If it's an image, compress it first
-        if (file.type.startsWith('image/')) {
-            window.showNeuroToast('جاري ضغط الصورة لزيادة سرعة الرفع..', 'info');
-            this.compressImage(file, (compressedBlob) => {
-                this.lastUploadedFile = compressedBlob;
-                const reader = new FileReader();
-                reader.onload = (re) => {
-                    this.pendingFileData = re.target.result; // Store here, not in HTML
-                    this.showCategorySelector(file.name, compressedBlob.size);
-                    URL.revokeObjectURL(objectUrl);
-                };
-                reader.readAsDataURL(compressedBlob);
-            });
-        } else {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                this.lastUploadedFile = file;
-                this.pendingFileData = e.target.result; // Store here
-                this.showCategorySelector(file.name, file.size);
-                URL.revokeObjectURL(objectUrl);
-            };
-            reader.readAsDataURL(file);
-        }
-    }
-
->>>>>>> 096b4003d49e4534b8f534e1081d7cfe568c02bf
     compressImage(file, callback) {
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -159,41 +120,12 @@ class PatientFileUI {
                 const canvas = document.createElement('canvas');
                 let width = img.width;
                 let height = img.height;
-<<<<<<< HEAD
                 const MAX = 1600;
                 if (width > height && width > MAX) { height *= MAX / width; width = MAX; }
                 else if (height > MAX) { width *= MAX / height; height = MAX; }
                 canvas.width = width; canvas.height = height;
                 canvas.getContext('2d').drawImage(img, 0, 0, width, height);
                 canvas.toBlob((blob) => callback(blob), 'image/jpeg', 0.7);
-=======
-
-                // Max dimensions for medical images (high enough for detail, small enough for speed)
-                const MAX_WIDTH = 1600;
-                const MAX_HEIGHT = 1600;
-
-                if (width > height) {
-                    if (width > MAX_WIDTH) {
-                        height *= MAX_WIDTH / width;
-                        width = MAX_WIDTH;
-                    }
-                } else {
-                    if (height > MAX_HEIGHT) {
-                        width *= MAX_HEIGHT / height;
-                        height = MAX_HEIGHT;
-                    }
-                }
-
-                canvas.width = width;
-                canvas.height = height;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, width, height);
-
-                // Compress as JPEG at 0.7 quality (excellent balance for X-rays)
-                canvas.toBlob((blob) => {
-                    callback(blob);
-                }, 'image/jpeg', 0.7);
->>>>>>> 096b4003d49e4534b8f534e1081d7cfe568c02bf
             };
             img.src = e.target.result;
         };
@@ -201,7 +133,6 @@ class PatientFileUI {
     }
 
     showCategorySelector(name, size) {
-<<<<<<< HEAD
         const html = `
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <button class="btn-neuro" onclick="window.patientFileUI.confirmUpload('${name}', 'xray', ${size})">أشعة X-Ray</button>
@@ -215,45 +146,16 @@ class PatientFileUI {
         showNeuroModal('تصنيف الملف', 'اختر نوع المستند للرفع الفوري:', null, false);
         const modalMsg = document.querySelector('.neuro-modal-msg');
         if (modalMsg) modalMsg.innerHTML = html;
-=======
-        // We no longer pass 'data' (the huge string) through these buttons
-        const categoryHTML = `
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; text-align: center;">
-                <button class="btn-neuro" onclick="window.patientFileUI.confirmUpload('${name}', 'xray', ${size})" style="justify-content: center;">أشعة X-Ray</button>
-                <button class="btn-neuro" onclick="window.patientFileUI.confirmUpload('${name}', 'mri', ${size})" style="justify-content: center;">RM (MRI)</button>
-                <button class="btn-neuro" onclick="window.patientFileUI.confirmUpload('${name}', 'ct', ${size})" style="justify-content: center;">أشعة مقطعية</button>
-                <button class="btn-neuro" onclick="window.patientFileUI.confirmUpload('${name}', 'lab', ${size})" style="justify-content: center;">تحليل معملي</button>
-                <button class="btn-neuro" onclick="window.patientFileUI.confirmUpload('${name}', 'report', ${size})" style="justify-content: center;">تقرير طبي</button>
-                <button class="btn-neuro" onclick="window.patientFileUI.confirmUpload('${name}', 'other', ${size})" style="justify-content: center;">أخرى</button>
-            </div>
-        `;
-
-        showNeuroModal('تصنيف الملف', 'تم ضغط الصورة بنجاح. اختر نوع المستند للرفع الفوري:', null, false);
-        const modalMsg = document.querySelector('.neuro-modal-msg');
-        if (modalMsg) {
-            modalMsg.style.marginTop = '20px';
-            modalMsg.innerHTML = categoryHTML;
-        }
->>>>>>> 096b4003d49e4534b8f534e1081d7cfe568c02bf
         const actions = document.querySelector('.neuro-modal-actions');
         if (actions) actions.style.display = 'none';
     }
 
     async confirmUpload(name, type, size) {
-<<<<<<< HEAD
-=======
-        // Close modal
->>>>>>> 096b4003d49e4534b8f534e1081d7cfe568c02bf
         const overlay = document.querySelector('.neuro-modal-overlay');
         if (overlay) overlay.remove();
 
         window.showNeuroToast('جاري الرفع المباشر للسحابة..', 'info');
-<<<<<<< HEAD
         const data = this.pendingFileData; // Get the huge string from memory
-=======
-
-        const data = this.pendingFileData; // Get the huge string from memory, not DOM
->>>>>>> 096b4003d49e4534b8f534e1081d7cfe568c02bf
 
         // Safety Check: Prevent crash if data is missing
         if (!data) {
@@ -274,11 +176,7 @@ class PatientFileUI {
             type: type,
             fileData: data,
             blob: this.lastUploadedFile,
-<<<<<<< HEAD
             mimeType: mimeType,
-=======
-            mimeType: data.split(';')[0].split(':')[1],
->>>>>>> 096b4003d49e4534b8f534e1081d7cfe568c02bf
             size: size
         }).then(() => {
             console.log("Background upload task initiated");
@@ -287,16 +185,8 @@ class PatientFileUI {
         // Render IMMEDIATELY regarding of cloud status
         this.renderDocuments();
         window.soundManager.playSuccess();
-<<<<<<< HEAD
         window.showNeuroToast('تم الإضافة للأرشيف (جاري التزامن...)');
         this.lastUploadedFile = null; this.pendingFileData = null;
-=======
-        window.showNeuroToast('تم الحفظ بنجاح (الرابط السحابي الذكي)');
-
-        // Final cleanup
-        this.lastUploadedFile = null;
-        this.pendingFileData = null;
->>>>>>> 096b4003d49e4534b8f534e1081d7cfe568c02bf
     }
 
     deleteDocument(docId) {
@@ -349,6 +239,3 @@ class PatientFileUI {
 }
 
 window.patientFileUI = new PatientFileUI();
-
-// --- Final Verification: Smart-Sync & Image Compression Engine Active (v2.0.1) ---
-// Securely optimized for Neuro-Clinic
