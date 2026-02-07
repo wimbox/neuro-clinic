@@ -47,33 +47,32 @@ class PatientDocuments {
             uploadDate: new Date().toISOString(),
             notes: documentData.notes || '',
             size: documentData.size || 0,
-            cloudUrl: null // Will be filled if successfully uploaded to Firebase
+            cloudUrl: null
         };
-
-        // --- Cloud Sync: Firebase Storage ---
-        if (typeof storage !== 'undefined' && storage && documentData.blob) {
-            try {
-                console.log("Documents Sync: Uploading to cloud storage...");
-                const storageRef = storage.ref(`documents/${patientId}/${doc.id}`);
-                const snapshot = await storageRef.put(documentData.blob);
-                const downloadURL = await snapshot.ref.getDownloadURL();
-                doc.cloudUrl = downloadURL;
-
-                // --- Smart Link Logic ---
-                // Purge local base64 to save local storage space (avoid 5MB browser limit)
-                // Now only the cloud URL resides in local memory.
-                doc.fileData = null;
-                console.log("Documents Sync: Success. Local storage purged, using smart link.");
-            } catch (err) {
-                console.error("Documents Sync: Failed to upload to cloud storage.", err);
-            }
-        }
 
         this.documents[patientId].push(doc);
         this.saveDocuments();
 
-        // Also trigger general sync since the patients data might have links
-        if (window.syncManager) window.syncManager.saveLocal();
+        // --- Cloud Sync: Firebase Storage ---
+        if (typeof storage !== 'undefined' && storage && documentData.blob) {
+            try {
+                const storageRef = storage.ref(`documents/${patientId}/${doc.id}`);
+                const snapshot = await storageRef.put(documentData.blob);
+                const downloadURL = await snapshot.ref.getDownloadURL();
+
+                // Update the actual object in the array
+                const savedDoc = this.documents[patientId].find(d => d.id === doc.id);
+                if (savedDoc) {
+                    savedDoc.cloudUrl = downloadURL;
+                    savedDoc.fileData = null; // Purge base64 only after cloud link is confirmed
+                }
+
+                this.saveDocuments();
+                console.log("Documents Sync: Cloud storage upload success and local data updated.");
+            } catch (err) {
+                console.error("Documents Sync: Failed to upload to cloud storage.", err);
+            }
+        }
 
         return doc;
     }
