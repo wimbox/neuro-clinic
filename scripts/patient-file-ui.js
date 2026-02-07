@@ -256,9 +256,14 @@ class PatientFileUI {
         window.soundManager.playSuccess();
         window.showNeuroToast('تم الحفظ بنجاح (الرابط السحابي الذكي)');
 
+<<<<<<< HEAD
         // Final cleanup
         this.lastUploadedFile = null;
         this.pendingFileData = null;
+=======
+        // Final cleanup of the blob from memory
+        this.lastUploadedFile = null;
+>>>>>>> 9c77bffca65a641bcff02ff8137c7c1d7f1bced6
     }
 
     deleteDocument(docId) {
