@@ -14,8 +14,10 @@ class SyncManager {
         this.DB_KEY = 'neuro_clinic_data_v1';
         // Force Reload Logic Fix
         this.data = this.loadLocal();
-        this.isNewSession = !localStorage.getItem(this.DB_KEY); // Detect fresh install
-        this.isPullDone = !this.isNewSession; // If not new, we can push. If new, MUST pull first.
+        this.isNewSession = !localStorage.getItem(this.DB_KEY);
+        this.isPullDone = false; // Start false to force initial check
+        this.syncQueue = []; // For granular updates
+        this.isSyncing = false;
 
         this.cloudStatus = 'offline';
         this.lastLatency = 0;
@@ -287,13 +289,14 @@ class SyncManager {
     }
 
     // --- Audit Logging ---
-    logAction(user, action, details) {
+    logAction(user, action, details, meta = null) {
         const log = {
             id: crypto.randomUUID(),
             timestamp: new Date().toISOString(),
             user: user, // username
             action: action, // e.g., 'DELETE_PATIENT', 'ADD_USER'
-            details: details
+            details: details,
+            meta: meta // Store backup of deleted data here
         };
         this.data.auditLog.unshift(log); // Add to top
         // Limit log size to last 1000 actions to save space
@@ -465,12 +468,17 @@ class SyncManager {
                 // Logic: Only pull if cloud is newer than our last session's sync 
                 // OR if this is a fresh install (isNewSession)
                 if (this.isNewSession || (cloudTime > lastSyncTime && cloudTime > lastLocalUpdateTime)) {
-                    console.log("Cloud Observer: Newer data found in cloud. Merging...");
-                    this.data = cloudData;
-                    // Persist locally
-                    localStorage.setItem(this.DB_KEY, JSON.stringify(this.data));
-                    this.isNewSession = false; // Fresh start over
-                    this.notifyDataChanged();
+
+                    // --- SAFETY CHECK: Prevent overwriting full data with empty cloud data ---
+                    if (cloudData.patients && cloudData.patients.length === 0 && this.data.patients.length > 10) {
+                        console.warn("Cloud Observer: Blocked merge of empty cloud data over populated local data.");
+                    } else {
+                        console.log("Cloud Observer: Newer data found in cloud. Merging...");
+                        this.data = cloudData;
+                        localStorage.setItem(this.DB_KEY, JSON.stringify(this.data));
+                        this.notifyDataChanged();
+                    }
+                    this.isNewSession = false;
                 } else {
                     console.log("Cloud Observer: Cloud update ignored (we have newer or equal local data).");
                 }
@@ -522,7 +530,14 @@ class SyncManager {
         const currentUser = window.authManager?.currentUser?.username || 'System';
         const patient = this.data.patients.find(p => p.id === id);
         if (patient) {
-            this.logAction(currentUser, 'DELETE_PATIENT', `حذف المريض وسجلاته المالية: ${patient.name} (#${patient.patientCode})`);
+            // Backup full data in log for recovery
+            const backupData = {
+                patient: { ...patient },
+                appointments: this.data.appointments.filter(a => a.patientId === id),
+                transactions: this.data.finances.transactions.filter(t => t.patientId === id)
+            };
+
+            this.logAction(currentUser, 'DELETE_PATIENT', `حذف المريض وسجلاته المالية: ${patient.name} (#${patient.patientCode})`, backupData);
 
             // 1. Remove Patient
             this.data.patients = this.data.patients.filter(p => p.id !== id);
@@ -775,10 +790,13 @@ class SyncManager {
 
         // --- Critical Safety Check ---
         if (!this.isPullDone) {
-            console.warn("Cloud sync: Push blocked. Waiting for initial cloud pull to prevent data wipe.");
-            // Retry in 2 seconds
-            if (this.syncTimeout) clearTimeout(this.syncTimeout);
-            this.syncTimeout = setTimeout(() => this.triggerCloudSync(), 2000);
+            console.warn("Cloud sync: Push blocked. Still waiting for initial cloud pull verification.");
+            return false;
+        }
+
+        // --- EMPTY DATA GUARD: Never push empty data if previous state was rich ---
+        if (this.data.patients.length === 0 && !this.isNewSession) {
+            console.error("Cloud sync: CRITICAL BLOCK. Tried to push 0 patients. Data wipe prevented.");
             return false;
         }
 

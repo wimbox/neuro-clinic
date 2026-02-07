@@ -194,14 +194,17 @@ class PatientFileUI {
             name: name,
             type: type,
             fileData: data,
-            blob: this.lastUploadedFile, // Pass blob for Firebase Storage
+            blob: this.lastUploadedFile,
             mimeType: data.split(';')[0].split(':')[1],
             size: size
         });
 
         this.renderDocuments();
         window.soundManager.playSuccess();
-        window.showNeuroToast('تم الحفظ بالرابط السحابي الذكي');
+        window.showNeuroToast('تم الحفظ بنجاح (الرابط السحابي الذكي)');
+
+        // Final cleanup of the blob from memory
+        this.lastUploadedFile = null;
     }
 
     deleteDocument(docId) {
