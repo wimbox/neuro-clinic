@@ -19,6 +19,105 @@ class PatientFileUI {
                 }
             };
         }
+
+        // Close Button
+        const closeBtn = document.getElementById('btn-close-file');
+        if (closeBtn) {
+            closeBtn.onclick = () => this.close();
+        }
+
+        // Start Prescription Button
+        const startPrescriptionBtn = document.getElementById('btn-file-start-prescription');
+        if (startPrescriptionBtn) {
+            startPrescriptionBtn.onclick = () => {
+                if (this.currentPatientId) {
+                    window.location.href = `editor.html?patientId=${this.currentPatientId}`;
+                }
+            };
+        }
+
+        // Delete Patient Button
+        const deleteBtn = document.getElementById('btn-delete-patient');
+        if (deleteBtn) {
+            deleteBtn.onclick = () => {
+                if (!this.currentPatientId) return;
+
+                window.soundManager.playDeleteWarning();
+                window.showNeuroModal('تأكيد الحذف', 'هل أنت متأكد من حذف هذا المريض نهائياً مع كافة سجلاته الطبية والمالية؟', () => {
+                    window.syncManager.deletePatient(this.currentPatientId);
+                    this.close();
+                    if (window.navigation) window.navigation.switchView('patients');
+                    window.showNeuroToast('تم حذف المريض وسجلاته بنجاح');
+                }, true);
+            };
+        }
+
+        // Edit Patient Form
+        const editForm = document.getElementById('edit-patient-form');
+        if (editForm) {
+            editForm.onsubmit = (e) => {
+                e.preventDefault();
+                if (!this.currentPatientId) return;
+
+                const n1 = document.getElementById('edit-name-1').value.trim();
+                const n2 = document.getElementById('edit-name-2').value.trim();
+                const n3 = document.getElementById('edit-name-3').value.trim();
+                const n4 = document.getElementById('edit-name-4').value.trim();
+
+                if (!n1 || !n2 || !n3) {
+                    window.soundManager.playError();
+                    window.showNeuroToast('يرجى إدخال الاسم الثلاثي على الأقل', 'error');
+                    return;
+                }
+
+                const fullName = [n1, n2, n3, n4].filter(part => part.length > 0).join(" ");
+
+                const patientData = {
+                    id: this.currentPatientId,
+                    name: fullName,
+                    age: document.getElementById('edit-p-age').value,
+                    phone: document.getElementById('edit-p-phone').value.trim()
+                };
+
+                window.syncManager.upsertPatient(patientData);
+                window.soundManager.playSuccess();
+                window.showNeuroToast('تم تحديث بيانات المريض بنجاح');
+
+                // Refresh local UI
+                document.getElementById('file-patient-name').textContent = fullName;
+                this.open(this.currentPatientId);
+            };
+        }
+
+        // Add Income Button (Ledger)
+        const addIncomeBtn = document.getElementById('btn-add-p-income');
+        const incomeInput = document.getElementById('add-p-income-amount');
+        if (addIncomeBtn && incomeInput) {
+            addIncomeBtn.onclick = () => {
+                const amount = parseFloat(incomeInput.value);
+                if (isNaN(amount) || amount <= 0) {
+                    window.soundManager.playError();
+                    return;
+                }
+
+                window.syncManager.addTransaction({
+                    patientId: this.currentPatientId,
+                    type: 'income',
+                    amount: amount,
+                    description: 'تحصيل نقدي (عن طريق ملف المريض)',
+                    beneficiary: 'Clinic'
+                });
+
+                incomeInput.value = '';
+                this.updateLedgerView();
+                window.soundManager.playSuccess();
+                window.showNeuroToast('تم تسجيل المبلغ في حساب المريض');
+            };
+
+            incomeInput.onkeydown = (e) => {
+                if (e.key === 'Enter') addIncomeBtn.click();
+            };
+        }
     }
 
     open(patientId) {
@@ -42,6 +141,8 @@ class PatientFileUI {
         if (document.getElementById('edit-name-1')) document.getElementById('edit-name-1').value = nameParts[0] || "";
         if (document.getElementById('edit-name-2')) document.getElementById('edit-name-2').value = nameParts[1] || "";
         if (document.getElementById('edit-name-3')) document.getElementById('edit-name-3').value = nameParts[2] || "";
+        if (document.getElementById('edit-name-4')) document.getElementById('edit-name-4').value = nameParts.slice(3).join(" ") || "";
+
         if (document.getElementById('edit-p-age')) document.getElementById('edit-p-age').value = patient.age || '';
         if (document.getElementById('edit-p-phone')) document.getElementById('edit-p-phone').value = patient.phone || '';
 
