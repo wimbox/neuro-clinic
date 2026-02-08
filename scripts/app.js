@@ -537,6 +537,12 @@ class App {
         this.initTools();
         this.initPatientIntegration();
 
+        // Fix: Listen for cloud sync updates to populate patient info if it wasn't ready initially
+        window.addEventListener('syncDataRefreshed', () => {
+            console.log("App: Data synced from cloud. Refreshing patient integration...");
+            this.initPatientIntegration();
+        });
+
         // تتبع آخر منطقة كتابة تم التركيز عليها لضمان عمل زر الاتجاه بشكل سليم
         this.lastFocusedArea = document.getElementById('main-content-area');
         [document.getElementById('main-content-area'), document.getElementById('right-margin-area')].forEach(area => {
