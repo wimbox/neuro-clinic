@@ -1060,16 +1060,66 @@ body {
     .neuro-main { width: 100%; padding-bottom: 70px; }
     .neuro-sidebar { position: fixed; bottom: 0; left: 0; width: 100%; height: 65px; flex-direction: row; justify-content: space-around; padding: 0; border-left: none; border-top: 1px solid var(--glass-border); background: rgba(15, 23, 42, 0.98); z-index: 9999; box-shadow: 0 -5px 20px rgba(0,0,0,0.5); }
     .sidebar-logo, .sidebar-footer { display: none !important; }
+    
+    /* Logout Button Styling in Mobile Nav */
+    .nav-item.logout-link {
+        color: #ef4444 !important;
+        border-top: none; 
+    }
+    .nav-item.logout-link i {
+        color: #ef4444 !important;
+    }
+    .nav-item.logout-link.active {
+        background: rgba(239, 68, 68, 0.1);
+        border-top: 3px solid #ef4444 !important;
+    }
+
     .nav-menu { flex-direction: row; width: 100%; justify-content: space-around; align-items: center; padding: 0; gap: 0; }
     .nav-item { flex: 1; border-radius: 0; padding: 8px 0; font-size: 0.7rem; gap: 4px; }
     .nav-item i { font-size: 1.4rem; margin-bottom: 0; }
     .nav-item.active { border: none; border-top: 3px solid var(--accent-blue); background: linear-gradient(to bottom, rgba(0, 234, 255, 0.1), transparent); }
-    .top-bar { padding: 0 15px; height: 60px; justify-content: space-around; }
+    
+    /* Top Bar Mobile Optimization */
+    .top-bar { 
+        padding: 0 15px; 
+        height: 60px; 
+        justify-content: space-between !important; 
+        gap: 15px;
+    }
     .top-ticker-bar { display: none !important; }
-    .search-bar { width: 40px; padding: 8px; background: transparent; border: none; }
-    .search-bar input { display: none; }
-    .search-bar:focus-within { width: 200px; background: #0f172a; position: absolute; left: 10px; z-index: 101; border: 1px solid var(--accent-blue); }
-    .search-bar:focus-within input { display: block; }
+    
+    /* Hide Less Important Elements */
+    .clinic-selector-container,
+    .top-bar-shortcuts {
+        display: none !important;
+    }
+    
+    /* Search Bar - Full Visibility */
+    .search-bar { 
+        width: auto !important;
+        flex: 1; 
+        padding: 0 15px; 
+        background: #0f172a; 
+        border: 1px solid rgba(255, 255, 255, 0.1); 
+        border-radius: 12px;
+    }
+    .search-bar input { 
+        display: block !important; 
+        width: 100%;
+        font-size: 1rem;
+    }
+    .search-bar:focus-within { 
+        /* Reset absolute positioning if it was there */
+        width: auto !important; 
+        position: static !important;
+        background: #0f172a;
+        z-index: auto;
+    }
+    
+    /* Hide Sync Info Text to save space */
+    .sync-info { display: none !important; }
+    .sync-sensor { margin-right: 0; padding: 5px 10px; }
+
     .stats-grid { grid-template-columns: 1fr; gap: 15px; }
     .stat-card { padding: 15px; border-radius: 16px; }
     .stat-icon { width: 50px; height: 50px; font-size: 1.5rem; }
@@ -1082,8 +1132,7 @@ body {
     .neuro-modal-title { font-size: 1.4rem; }
     .header-nav-btn span { display: none; }
     .header-nav-btn { padding: 8px; }
-}
-@media screen and (max-width: 768px) {
+
     /* Hide Specific Nav Items */
     .nav-item[onclick*='queue-display.html'],
     .nav-item[data-view='templates'] { display: none !important; }

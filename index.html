@@ -49,14 +49,14 @@
                     <i class="fa-solid fa-file-medical"></i>
                     <span>مكتبة الروشتات</span>
                 </a>
-            </nav>
-
-            <div class="sidebar-footer">
                 <a href="javascript:void(0)" class="nav-item logout-link" id="btn-logout"
                     onclick="window.authManager.logout()">
                     <i class="fa-solid fa-right-from-bracket"></i>
                     <span>خروج</span>
                 </a>
+            </nav>
+
+            <div class="sidebar-footer">
             </div>
         </aside>
 
@@ -87,7 +87,8 @@
             <!-- Top Bar -->
             <header class="top-bar">
                 <!-- Clinic Selector -->
-                <div style="display: flex; align-items: center; gap: 10px; margin-left: 20px;">
+                <div class="clinic-selector-container"
+                    style="display: flex; align-items: center; gap: 10px; margin-left: 20px;">
                     <div
                         style="display: flex; align-items: center; gap: 10px; background: #1e293b; padding: 5px 12px; border-radius: 12px; border: 2px solid var(--accent-blue); box-shadow: 0 0 15px rgba(0, 234, 255, 0.1);">
                         <i class="fa-solid fa-hospital" style="color: var(--accent-blue); font-size: 1rem;"></i>
@@ -125,7 +126,8 @@
 
                 <!-- Shortcuts (Buttons with better harmony) -->
                 <!-- Shortcuts (Aligned next to search) -->
-                <div style="display: flex; align-items: center; gap: 10px; margin-right: 20px;">
+                <div class="top-bar-shortcuts"
+                    style="display: flex; align-items: center; gap: 10px; margin-right: 20px;">
                     <a href="editor.html" class="header-nav-btn" title="محرر الروشتات">
                         <i class="fa-solid fa-file-signature"></i>
                         <span>محرر الروشتات</span>
