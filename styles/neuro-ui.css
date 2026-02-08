@@ -1055,106 +1055,248 @@ body {
     border-color: var(--accent-blue);
     background: rgba(0, 234, 255, 0.05);
     cursor: help;
-}@media screen and (max-width: 768px) {
-    .neuro-container { flex-direction: column; }
-    .neuro-main { width: 100%; padding-bottom: 70px; }
-    .neuro-sidebar { position: fixed; bottom: 0; left: 0; width: 100%; height: 65px; flex-direction: row; justify-content: space-around; padding: 0; border-left: none; border-top: 1px solid var(--glass-border); background: rgba(15, 23, 42, 0.98); z-index: 9999; box-shadow: 0 -5px 20px rgba(0,0,0,0.5); }
-    .sidebar-logo, .sidebar-footer { display: none !important; }
-    
+}
+
+@media screen and (max-width: 768px) {
+    .neuro-container {
+        flex-direction: column;
+    }
+
+    .neuro-main {
+        width: 100%;
+        padding-bottom: 70px;
+    }
+
+    .neuro-sidebar {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 65px;
+        flex-direction: row;
+        justify-content: space-around;
+        padding: 0;
+        border-left: none;
+        border-top: 1px solid var(--glass-border);
+        background: rgba(15, 23, 42, 0.98);
+        z-index: 9999;
+        box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.5);
+    }
+
+    .sidebar-logo,
+    .sidebar-footer {
+        display: none !important;
+    }
+
     /* Logout Button Styling in Mobile Nav */
     .nav-item.logout-link {
         color: #ef4444 !important;
-        border-top: none; 
+        border-top: none;
     }
+
     .nav-item.logout-link i {
         color: #ef4444 !important;
     }
+
     .nav-item.logout-link.active {
         background: rgba(239, 68, 68, 0.1);
         border-top: 3px solid #ef4444 !important;
     }
 
-    .nav-menu { flex-direction: row; width: 100%; justify-content: space-around; align-items: center; padding: 0; gap: 0; }
-    .nav-item { flex: 1; border-radius: 0; padding: 8px 0; font-size: 0.7rem; gap: 4px; }
-    .nav-item i { font-size: 1.4rem; margin-bottom: 0; }
-    .nav-item.active { border: none; border-top: 3px solid var(--accent-blue); background: linear-gradient(to bottom, rgba(0, 234, 255, 0.1), transparent); }
-    
+    .nav-menu {
+        flex-direction: row;
+        width: 100%;
+        justify-content: space-around;
+        align-items: center;
+        padding: 0;
+        gap: 0;
+    }
+
+    .nav-item {
+        flex: 1;
+        border-radius: 0;
+        padding: 8px 0;
+        font-size: 0.7rem;
+        gap: 4px;
+    }
+
+    .nav-item i {
+        font-size: 1.4rem;
+        margin-bottom: 0;
+    }
+
+    .nav-item.active {
+        border: none;
+        border-top: 3px solid var(--accent-blue);
+        background: linear-gradient(to bottom, rgba(0, 234, 255, 0.1), transparent);
+    }
+
     /* Top Bar Mobile Optimization */
-    .top-bar { 
-        padding: 0 15px; 
-        height: 60px; 
-        justify-content: space-between !important; 
+    .top-bar {
+        padding: 0 15px;
+        height: 70px;
+        /* Slightly taller for better touch targets */
+        justify-content: space-between !important;
         gap: 15px;
     }
-    .top-ticker-bar { display: none !important; }
-    
-    /* Hide Less Important Elements */
-    .clinic-selector-container,
-    .top-bar-shortcuts {
+
+    .top-ticker-bar {
         display: none !important;
     }
-    
-    /* Search Bar - Full Visibility */
-    .search-bar { 
-        width: auto !important;
-        flex: 1; 
-        padding: 0 15px; 
-        background: #0f172a; 
-        border: 1px solid rgba(255, 255, 255, 0.1); 
-        border-radius: 12px;
+
+    /* Hide Less Important Elements + Sound/Sync */
+    .clinic-selector-container,
+    .top-bar-shortcuts,
+    .sync-sensor,
+    #btn-toggle-sound {
+        display: none !important;
     }
-    .search-bar input { 
-        display: block !important; 
+
+    /* Search Bar - Full Visibility & Enhanced Size */
+    .search-bar {
+        width: 100% !important;
+        flex: 1;
+        height: 50px;
+        /* Taller input */
+        padding: 0 15px;
+        background: #0f172a;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 14px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .search-bar input {
+        display: block !important;
         width: 100%;
-        font-size: 1rem;
+        height: 100%;
+        font-size: 1.1rem;
+        /* Larger font */
+        font-weight: 600;
     }
-    .search-bar:focus-within { 
-        /* Reset absolute positioning if it was there */
-        width: auto !important; 
+
+    .search-bar i {
+        font-size: 1.2rem;
+        /* Larger icon */
+    }
+
+    .search-bar:focus-within {
+        width: 100% !important;
         position: static !important;
         background: #0f172a;
+        border-color: var(--accent-blue);
+        box-shadow: 0 0 15px rgba(0, 234, 255, 0.15);
         z-index: auto;
     }
-    
-    /* Hide Sync Info Text to save space */
-    .sync-info { display: none !important; }
-    .sync-sensor { margin-right: 0; padding: 5px 10px; }
 
-    .stats-grid { grid-template-columns: 1fr; gap: 15px; }
-    .stat-card { padding: 15px; border-radius: 16px; }
-    .stat-icon { width: 50px; height: 50px; font-size: 1.5rem; }
-    .stat-info h3 { font-size: 1.5rem; }
-    .data-card { padding: 15px; border-radius: 20px; overflow: hidden; }
-    .section-header { flex-direction: column; align-items: flex-start; gap: 10px; }
-    .section-header button { width: 100%; justify-content: center; }
-    .neuro-table { display: block; width: 100%; overflow-x: auto; white-space: nowrap; }
-    .neuro-modal-content { width: 95%; padding: 20px; max-height: 85vh; overflow-y: auto; }
-    .neuro-modal-title { font-size: 1.4rem; }
-    .header-nav-btn span { display: none; }
-    .header-nav-btn { padding: 8px; }
+    /* Hide Sync Info Text to save space */
+    .sync-info {
+        display: none !important;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+
+    .stat-card {
+        padding: 15px;
+        border-radius: 16px;
+    }
+
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 1.5rem;
+    }
+
+    .stat-info h3 {
+        font-size: 1.5rem;
+    }
+
+    .data-card {
+        padding: 15px;
+        border-radius: 20px;
+        overflow: hidden;
+    }
+
+    .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .section-header button {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .neuro-table {
+        display: block;
+        width: 100%;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+
+    .neuro-modal-content {
+        width: 95%;
+        padding: 20px;
+        max-height: 85vh;
+        overflow-y: auto;
+    }
+
+    .neuro-modal-title {
+        font-size: 1.4rem;
+    }
+
+    .header-nav-btn span {
+        display: none;
+    }
+
+    .header-nav-btn {
+        padding: 8px;
+    }
 
     /* Hide Specific Nav Items */
     .nav-item[onclick*='queue-display.html'],
-    .nav-item[data-view='templates'] { display: none !important; }
+    .nav-item[data-view='templates'] {
+        display: none !important;
+    }
 
     /* Settings View Mobile Optimizations */
-    #view-settings { padding: 10px !important; }
-    #view-settings > div { padding: 15px !important; margin-top: 15px !important; }
-    
+    #view-settings {
+        padding: 10px !important;
+    }
+
+    #view-settings>div {
+        padding: 15px !important;
+        margin-top: 15px !important;
+    }
+
     /* Health Status Card Vertical Stack */
-    #view-settings > div:first-of-type { flex-direction: column; gap: 15px; text-align: center; }
-    #view-settings > div:first-of-type div:last-child { min-width: 100% !important; }
+    #view-settings>div:first-of-type {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+    }
+
+    #view-settings>div:first-of-type div:last-child {
+        min-width: 100% !important;
+    }
 
     /* Backup & Security Grids Vertical Stack */
     #view-settings .data-card div[style*='grid-template-columns: 1fr 1fr'],
-    #view-settings div[style*='grid-template-columns: 1fr 1fr'] { 
-        grid-template-columns: 1fr !important; 
-        gap: 15px !important; 
+    #view-settings div[style*='grid-template-columns: 1fr 1fr'] {
+        grid-template-columns: 1fr !important;
+        gap: 15px !important;
     }
 
     /* Users List Grid */
-    #users-list-container > div { grid-template-columns: 1fr !important; }
-    
+    #users-list-container>div {
+        grid-template-columns: 1fr !important;
+    }
+
     /* Clinics Management Grid */
-    #clinics-list-container > div { grid-template-columns: 1fr !important; }
+    #clinics-list-container>div {
+        grid-template-columns: 1fr !important;
+    }
 }
