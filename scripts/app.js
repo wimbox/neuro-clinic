@@ -492,6 +492,10 @@ class Editor {
         if (patientGender) patientGender.textContent = '';
         if (patientDate) patientDate.textContent = '';
 
+        // Clear Patient ID
+        const patientIdDisplay = document.getElementById('patient-id-display');
+        if (patientIdDisplay) patientIdDisplay.textContent = '';
+
         // Clear writing areas
         const marginArea = document.getElementById('right-margin-area');
         const mainArea = document.getElementById('main-content-area');
@@ -555,6 +559,15 @@ class App {
             if (nameEl) nameEl.textContent = selected.name;
             if (ageEl) ageEl.textContent = selected.age;
             if (genderEl) genderEl.textContent = selected.gender;
+
+            // Patient ID Display
+            const idEl = document.getElementById('patient-id-display');
+            if (idEl) {
+                // Ensure ID is displayed as #123#
+                // We use the patientCode (human readable) instead of the UUID
+                const code = selected.patientCode || '---';
+                idEl.textContent = `#${code}#`;
+            }
 
             // Show allergy alert if exists
             if (selected.allergies) {
@@ -845,8 +858,17 @@ class App {
         const newBtn = document.getElementById('btn-new');
         if (newBtn) {
             newBtn.addEventListener('click', () => {
-                showCustomModal('روشتة جديدة', 'هل تريد بدء روشتة جديدة؟ سيتم مسح النص الحالي.', () => {
+                showCustomModal('روشتة جديدة', 'هل تريد بدء روشتة جديدة؟ سيتم مسح النص الحالي وإلغاء اختيار المريض.', () => {
                     this.editor.clearWorkspace();
+
+                    // Remove patientId from URL without reloading
+                    const url = new URL(window.location);
+                    url.searchParams.delete('patientId');
+                    window.history.pushState({}, '', url);
+
+                    // Clear any internal selection state if necessary
+                    // (clearWorkspace handles UI, but patientManager might need reset if it caches)
+                    // For now, removing URL param is enough to stop re-init on reload.
                 }, true);
             });
         }

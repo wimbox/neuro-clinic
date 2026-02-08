@@ -146,6 +146,27 @@
     box-shadow: none;
 }
 
+/* Patient ID Field (New) */
+.patient-id-field {
+    position: absolute;
+    top: calc(73mm + 5px);
+    /* Just below the header fields (61mm top + 12mm height) */
+    right: 45mm;
+    /* Aligned roughly under the Name field */
+    font-family: 'Courier New', monospace;
+    /* Monospace for ID look */
+    font-size: 20px;
+    /* Increased to 20px as requested */
+    color: #64748b;
+    font-weight: bold;
+    /* Bold as requested */
+    direction: ltr;
+    /* IDs are usually LTR */
+    pointer-events: none;
+    /* Not editable directly */
+    z-index: 5;
+}
+
 .header-input:empty:before {
     content: attr(data-placeholder);
     color: #94a3b8;
@@ -158,6 +179,8 @@
     max-width: 300px;
     flex: 1;
     margin-right: 20px;
+    font-size: 18px !important;
+    /* Fixed at 18px as requested */
     /* تحريك الخانة لليسار قليلاً (إبعادها عن كلمة الاسم) */
 }
 

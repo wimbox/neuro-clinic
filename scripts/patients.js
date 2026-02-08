@@ -12,7 +12,16 @@ class PatientManager {
     }
 
     // Picks up the ID from localStorage set by the Dashboard
+    // UPDATED: Now also checks URL parameters for direct linking
     getSelectedPatient() {
+        // 1. Try URL Parameter first (Stronger)
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlId = urlParams.get('patientId');
+        if (urlId) {
+            return this.patients.find(p => p.id === urlId);
+        }
+
+        // 2. Fallback to LocalStorage (Legacy / Default)
         const id = localStorage.getItem('selected_patient_id');
         if (id) {
             return this.patients.find(p => p.id === id);

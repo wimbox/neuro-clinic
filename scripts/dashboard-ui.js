@@ -581,6 +581,14 @@ class DashboardUI {
                     patientData.id = patientForm.dataset.editId;
                 }
 
+                // Validate Age (1-2 digits only)
+                const ageVal = document.getElementById('book-age').value;
+                if (!ageVal || !/^\d{1,2}$/.test(ageVal)) {
+                    window.soundManager.playError();
+                    showNeuroModal('خطأ في العمر', 'يرجى إدخال العمر بشكل صحيح (رقمين كحد أقصى، ولا يسمح بالحروف).', null, false);
+                    return;
+                }
+
                 // Use upsertPatient for both add and update (handles ID generation if new)
                 try {
                     syncManager.upsertPatient(patientData);
