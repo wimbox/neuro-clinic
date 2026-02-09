@@ -979,15 +979,15 @@ class DashboardUI {
                 <td style="color: var(--accent-blue); font-weight: 800; font-family: 'Inter';">#${p.patientCode || '10x'}#</td>
                 <td>
                     <div style="display: flex; align-items: center; gap: 12px;">
-                        <div style="width: 35px; height: 35px; border-radius: 10px; background: #0f172a; border: 1px solid var(--accent-blue); display:flex; align-items:center; justify-content:center; color: var(--accent-blue); font-weight: 800; box-shadow: 0 0 15px rgba(0, 234, 255, 0.1);">
+                        <div style="width: 35px; height: 35px; border-radius: 10px; background: var(--bg-deep); border: 1px solid var(--accent-blue); display:flex; align-items:center; justify-content:center; color: var(--accent-blue); font-weight: 800; box-shadow: 0 0 15px var(--glass-border);">
                             ${p.name.charAt(0)}
                         </div>
-                        <strong style="color: #fff; font-size: 1rem;">${p.name}</strong>
+                        <strong style="color: var(--text-primary); font-size: 1rem;">${p.name}</strong>
                     </div>
                 </td>
-                <td style="color: #fff; font-weight: 600;">${p.age || '--'}</td>
-                <td style="color: #94a3b8;">${p.phone || '--'}</td>
-                <td style="color: var(--accent-glow); font-size: 0.9rem;">${p.visits && p.visits.length > 0 ? p.visits[0].date : 'بدون زيارات'}</td>
+                <td style="color: var(--text-primary); font-weight: 600;">${p.age || '--'}</td>
+                <td style="color: var(--text-secondary);">${p.phone || '--'}</td>
+                <td style="color: var(--accent-blue); font-size: 0.9rem;">${p.visits && p.visits.length > 0 ? p.visits[0].date : 'بدون زيارات'}</td>
                 <td>
                     <div style="display: flex; gap: 8px;">
                         <button class="btn-edit-tool" onclick="event.stopPropagation(); dashboardUI.editPatient('${p.id}')" title="تعديل البيانات">
@@ -2047,5 +2047,50 @@ class DashboardUI {
 
 document.addEventListener('DOMContentLoaded', () => {
     window.dashboardUI = new DashboardUI();
+
+    // Theme Switcher Logic (New)
+    const themeBtn = document.getElementById('btn-theme-switcher');
+    const themeMenu = document.getElementById('theme-menu');
+    const themeOptions = document.querySelectorAll('.theme-option');
+
+    if (themeBtn && themeMenu) {
+        // Toggle Menu
+        themeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            themeMenu.classList.toggle('active');
+        });
+
+        // Close when clicking outside
+        document.addEventListener('click', () => {
+            themeMenu.classList.remove('active');
+        });
+
+        // Select Theme
+        themeOptions.forEach(opt => {
+            opt.addEventListener('click', () => {
+                const theme = opt.dataset.theme;
+                applyTheme(theme);
+                themeMenu.classList.remove('active');
+            });
+        });
+    }
+
+    function applyTheme(theme) {
+        // Remove existing theme classes
+        document.body.classList.remove('theme-blue', 'theme-gold', 'theme-light', 'theme-royal');
+        // Add new theme
+        document.body.classList.add(theme);
+        // Save preference
+        localStorage.setItem('selectedTheme', theme);
+        console.log("Theme applied & saved:", theme);
+    }
+
+    // Initialize saved theme
+    const savedTheme = localStorage.getItem('selectedTheme');
+    if (savedTheme) {
+        applyTheme(savedTheme);
+    } else {
+        applyTheme('theme-blue'); // Default
+    }
 });
 
