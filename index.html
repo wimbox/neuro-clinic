@@ -148,7 +148,7 @@
                         <i class="fa-solid fa-chevron-down" style="font-size: 0.7rem; opacity: 0.7;"></i>
                     </button>
                     <div class="theme-menu" id="theme-menu"
-                        style="position: absolute; top: calc(100% + 10px); left: 0; background: rgba(15, 23, 42, 0.95); border: 2px solid var(--accent-blue); border-radius: 16px; width: 220px; padding: 10px; z-index: 1000; box-shadow: 0 10px 30px rgba(0,0,0,0.5); backdrop-filter: blur(20px);">
+                        style="display: none; position: absolute; top: calc(100% + 10px); left: 0; background: rgba(15, 23, 42, 0.95); border: 2px solid var(--accent-blue); border-radius: 16px; width: 220px; padding: 10px; z-index: 1000; box-shadow: 0 10px 30px rgba(0,0,0,0.5); backdrop-filter: blur(20px);">
                         <div class="theme-option" data-theme="theme-blue"
                             style="padding: 12px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 12px; transition: all 0.2s; color: #fff; font-weight: 600;">
                             <span
@@ -175,6 +175,34 @@
                         </div>
                     </div>
                 </div>
+
+                <script>
+                    document.getElementById('btn-theme-switcher').addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const menu = document.getElementById('theme-menu');
+                        menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+                    });
+
+                    // Close menu when clicking outside
+                    document.addEventListener('click', (e) => {
+                        const menu = document.getElementById('theme-menu');
+                        const btn = document.getElementById('btn-theme-switcher');
+                        if (menu.style.display === 'block' && !menu.contains(e.target) && !btn.contains(e.target)) {
+                            menu.style.display = 'none';
+                        }
+                    });
+
+                    // Theme Selection Logic
+                    document.querySelectorAll('.theme-option').forEach(option => {
+                        option.addEventListener('click', () => {
+                            const theme = option.dataset.theme;
+                            // Apply theme logic here (you might need to implement the actual CSS class switching on body)
+                            document.body.className = theme;
+                            localStorage.setItem('neuro_theme', theme);
+                            document.getElementById('theme-menu').style.display = 'none';
+                        });
+                    });
+                </script>
 
                 <!-- Sound Toggle Button -->
                 <button id="btn-toggle-sound" class="btn-sound-toggle" title="تبديل الصوت">

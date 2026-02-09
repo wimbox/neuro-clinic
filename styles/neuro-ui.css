@@ -1181,11 +1181,11 @@ body {
 
     .search-bar:focus-within {
         width: 100% !important;
-        position: static !important;
+        position: relative !important;
         background: #0f172a;
         border-color: var(--accent-blue);
         box-shadow: 0 0 15px rgba(0, 234, 255, 0.15);
-        z-index: auto;
+        z-index: 1001;
     }
 
     /* Hide Sync Info Text to save space */
