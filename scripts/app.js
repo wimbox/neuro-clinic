@@ -802,9 +802,12 @@ class App {
         document.querySelectorAll('.theme-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 // Remove all themes
-                document.body.classList.remove('theme-blue', 'theme-gray', 'theme-red', 'theme-brown', 'theme-gold');
+                document.body.classList.remove('theme-blue', 'theme-gray', 'theme-red', 'theme-brown', 'theme-gold', 'theme-light');
                 // Add new theme
                 document.body.classList.add(btn.dataset.theme);
+
+                // Save theme preference
+                localStorage.setItem('selectedTheme', btn.dataset.theme);
 
                 // Update active state visual
                 document.querySelectorAll('.theme-btn').forEach(b => b.style.borderColor = 'transparent');
@@ -1735,6 +1738,22 @@ class App {
 // Initialize Global App
 window.addEventListener('DOMContentLoaded', () => {
     window.app = new App();
+
+    // Restore saved theme
+    const savedTheme = localStorage.getItem('selectedTheme');
+    if (savedTheme) {
+        document.body.classList.remove('theme-blue', 'theme-gray', 'theme-red', 'theme-brown', 'theme-gold', 'theme-light');
+        document.body.classList.add(savedTheme);
+
+        // Highlight the active theme button
+        document.querySelectorAll('.theme-btn').forEach(btn => {
+            if (btn.dataset.theme === savedTheme) {
+                btn.style.borderColor = 'white';
+            } else {
+                btn.style.borderColor = 'transparent';
+            }
+        });
+    }
 
     // Auto-fill Date
     const dateField = document.getElementById('patient-date');
