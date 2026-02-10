@@ -1057,7 +1057,7 @@ body {
     cursor: help;
 }
 
-@media screen and (max-width: 768px) {
+@media screen and (max-width: 1024px) {
     .neuro-container {
         flex-direction: column;
     }
@@ -1076,7 +1076,7 @@ body {
         flex-direction: row;
         justify-content: space-around;
         padding: 0;
-        border-left: none;
+        border-right: none;
         border-top: 1px solid var(--glass-border);
         background: rgba(15, 23, 42, 0.98);
         z-index: 9999;
@@ -1152,17 +1152,16 @@ body {
         display: none !important;
     }
 
-    /* Search Bar - Full Visibility & Enhanced Size */
+    /* Search Bar - Maximum Visibility on Mobile */
     .search-bar {
         width: 100% !important;
-        flex: 1;
+        flex: 2 !important;
         height: 50px;
-        /* Taller input */
         padding: 0 15px;
         background: #0f172a;
-        border: 1px solid rgba(255, 255, 255, 0.15);
+        border: 2px solid var(--accent-blue) !important;
         border-radius: 14px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 0 15px rgba(0, 234, 255, 0.2);
     }
 
     .search-bar input {
@@ -1170,22 +1169,13 @@ body {
         width: 100%;
         height: 100%;
         font-size: 1.1rem;
-        /* Larger font */
-        font-weight: 600;
+        font-weight: 700;
+        color: #fff !important;
     }
 
-    .search-bar i {
-        font-size: 1.2rem;
-        /* Larger icon */
-    }
-
-    .search-bar:focus-within {
-        width: 100% !important;
-        position: relative !important;
-        background: #0f172a;
-        border-color: var(--accent-blue);
-        box-shadow: 0 0 15px rgba(0, 234, 255, 0.15);
-        z-index: 1001;
+    /* Desktop Only Utility - Expanded for tablets */
+    .desktop-only {
+        display: none !important;
     }
 
     /* Hide Sync Info Text to save space */
@@ -1309,14 +1299,12 @@ body {
 body.theme-blue {
     --bg-deep: #0a192f;
     --bg-surface: #112240;
-    --accent-blue: #64ffda;
-    --accent-glow: #64ffda;
-    --glass-border: rgba(100, 255, 218, 0.1);
+    --accent-blue: #00eaff;
+    --accent-glow: #00eaff;
+    --glass-border: rgba(0, 234, 255, 0.2);
     --text-primary: #ffffff;
-    /* pure white for names */
     --text-secondary: #a8b2d1;
-    /* silver blue */
-    --neon-shadow: 0 0 15px rgba(100, 255, 218, 0.15);
+    --neon-shadow: 0 0 20px rgba(0, 234, 255, 0.3);
 }
 
 /* --- 2. THEME: MUTED BRONZE (Luxury Night Mode) --- */
@@ -1367,134 +1355,7 @@ body.theme-gold .btn-neuro:hover {
     }
 }
 
-/* --- 3. THEME: DARK ROYAL MARBLE (Nero Gold Marble) --- */
-body.theme-light {
-    --bg-deep: #0a0a0a;
-    /* Deep Black Marble */
-    --bg-surface: #141414;
-    /* Charcoal Surface */
-    --accent-blue: #d4af37;
-    /* Deeper Gold */
-    --accent-glow: #c5a059;
-    --glass-border: rgba(197, 160, 89, 0.2);
-    --text-primary: #ffffff;
-    /* Strong white for Names */
-    --text-secondary: #b0b0b0;
-    --neon-shadow: 0 0 20px rgba(197, 160, 89, 0.2);
-}
 
-body.theme-light {
-    background: radial-gradient(circle at 50% 50%, #1a1a1a 0%, #0a0a0a 100%);
-    color: #f5f5f5;
-}
-
-body.theme-light .neuro-sidebar {
-    background: rgba(10, 10, 10, 0.98) !important;
-    border-left: 2px solid var(--glass-border) !important;
-}
-
-body.theme-light .top-bar,
-body.theme-light .top-ticker-bar {
-    background: rgba(10, 10, 10, 0.95) !important;
-    border-bottom: 2px solid var(--glass-border) !important;
-}
-
-body.theme-light .stat-card,
-body.theme-light .data-card {
-    background: rgba(197, 160, 89, 0.05) !important;
-    border: 1px solid var(--glass-border) !important;
-    backdrop-filter: blur(15px);
-}
-
-body.theme-light .stat-card:hover {
-    border-color: #c5a059 !important;
-    box-shadow: 0 0 25px rgba(197, 160, 89, 0.3) !important;
-}
-
-body.theme-light .stat-info h3,
-body.theme-light .section-header h2 {
-    color: #c5a059;
-    text-shadow: 0 0 10px rgba(197, 160, 89, 0.3);
-}
-
-body.theme-light .nav-item {
-    color: #b0b0b0;
-}
-
-body.theme-light .nav-item:hover,
-body.theme-light .nav-item.active {
-    background: rgba(197, 160, 89, 0.1);
-    color: #fff;
-    border-color: #c5a059;
-}
-
-body.theme-light .btn-neuro {
-    background: transparent;
-    color: #c5a059;
-    border: 2px solid #c5a059;
-    text-shadow: 0 0 8px #c5a059;
-}
-
-body.theme-light .btn-neuro:hover {
-    background: #c5a059;
-    color: #000;
-    box-shadow: 0 0 30px #c5a059;
-}
-
-body.theme-light .neuro-table td {
-    background: rgba(10, 10, 10, 0.3);
-    border-color: rgba(197, 160, 89, 0.1);
-    color: #f5f5f5;
-}
-
-body.theme-light .search-bar {
-    background: #0a0a0a;
-    border: 1px solid var(--glass-border);
-}
-
-body.theme-light .theme-menu {
-    background: #0a0a0a !important;
-    border-color: #c5a059 !important;
-}
-
-body.theme-light .theme-option {
-    color: #b0b0b0 !important;
-}
-
-body.theme-light .theme-option:hover {
-    background: rgba(197, 160, 89, 0.1) !important;
-}
-
-
-/* Theme Dropdown Enhancements */
-.theme-menu {
-    border-radius: 12px;
-    overflow: hidden;
-    padding: 6px !important;
-}
-
-.theme-option {
-    border-radius: 8px !important;
-    margin-bottom: 2px;
-}
-
-/* Animation for dropdown */
-@keyframes dropdownFade {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.theme-menu.active {
-    display: block !important;
-    animation: dropdownFade 0.3s ease forwards;
-}
 
 /* --- 4. THEME: CLEAR ALABASTER (Inverted Slate Rock) --- */
 body.theme-royal {
@@ -1636,4 +1497,11 @@ body.theme-royal .theme-option {
 
 body.theme-royal .theme-option:hover {
     background: #f1f5f9 !important;
+}
+
+/* Mobile Utilities */
+@media (max-width: 768px) {
+    .desktop-only {
+        display: none !important;
+    }
 }
