@@ -1087,11 +1087,22 @@ body {
 @media screen and (max-width: 1024px) {
     .neuro-container {
         flex-direction: column;
+        height: auto !important;
+        overflow: visible !important;
     }
 
     .neuro-main {
         width: 100%;
-        padding-bottom: 70px;
+        height: auto !important;
+        overflow: visible !important;
+        padding-bottom: 100px !important;
+        /* Space for fixed bottom nav */
+    }
+
+    .view-container {
+        padding: 15px !important;
+        height: auto !important;
+        overflow: visible !important;
     }
 
     .neuro-sidebar {
@@ -1315,6 +1326,97 @@ body {
     /* Clinics Management Grid */
     #clinics-list-container>div {
         grid-template-columns: 1fr !important;
+    }
+
+    /* Force all 2-column or multi-column grids and flex containers to stack */
+    div[style*="grid-template-columns: 1fr 1fr"],
+    div[style*="grid-template-columns: repeat(2, 1fr)"],
+    div[style*="display: grid; grid-template-columns"],
+    .modal-content div[style*="display: flex; gap: 30px"],
+    .modal-content div[style*="display: flex; gap: 20px"],
+    .modal-content div[style*="display: flex; gap: 15px"],
+    .stats-grid {
+        grid-template-columns: 1fr !important;
+        flex-direction: column !important;
+        gap: 15px !important;
+    }
+
+    /* Modal Content Mobile Fix */
+    .modal-content {
+        width: 95% !important;
+        max-width: 95vw !important;
+        padding: 25px 20px !important;
+        max-height: 90vh !important;
+        overflow-y: auto !important;
+        display: block !important;
+    }
+
+    /* Form Fields Full Width */
+    .form-group,
+    .modal-content input,
+    .modal-content select,
+    .modal-content textarea {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-inline-start: 0 !important;
+    }
+
+    /* Special handling for Gender Toggle */
+    .gender-toggle {
+        display: flex !important;
+        flex-direction: row !important;
+    }
+
+    /* Triple name inputs */
+    .triple-name-container {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        flex-direction: row !important;
+        gap: 10px !important;
+    }
+
+    .triple-name-container input {
+        width: calc(50% - 5px) !important;
+        flex: none !important;
+        height: 50px !important;
+    }
+
+    /* Action Buttons at the bottom of modals */
+    div[style*="flex-direction: row-reverse"],
+    div[style*="display: flex; gap: 12px; border-top"] {
+        flex-direction: column !important;
+        gap: 10px !important;
+    }
+
+    div[style*="flex-direction: row-reverse"] button,
+    div[style*="display: flex; gap: 12px; border-top"] button {
+        width: 100% !important;
+        height: 55px !important;
+    }
+
+    /* Table horizontal scroll */
+    .neuro-table {
+        display: block !important;
+        width: 100% !important;
+        overflow-x: auto !important;
+        white-space: nowrap !important;
+    }
+
+    /* Patient File Header Adjustment */
+    #file-patient-name {
+        font-size: 1.5rem !important;
+        text-align: center;
+    }
+
+    #file-patient-info {
+        font-size: 0.85rem !important;
+        text-align: center;
+    }
+
+    .modal-content>div:first-child[style*="justify-content: space-between"] {
+        flex-direction: column !important;
+        text-align: center;
+        gap: 20px;
     }
 }
 
