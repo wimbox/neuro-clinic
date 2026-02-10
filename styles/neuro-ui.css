@@ -1085,9 +1085,22 @@ body {
 }
 
 @media screen and (max-width: 1024px) {
+
+    html,
+    body {
+        height: auto !important;
+        min-height: 100% !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        position: relative !important;
+        background-attachment: fixed !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
     .neuro-container {
         flex-direction: column;
         height: auto !important;
+        min-height: 100vh !important;
         overflow: visible !important;
     }
 
@@ -1095,8 +1108,10 @@ body {
         width: 100%;
         height: auto !important;
         overflow: visible !important;
-        padding-bottom: 100px !important;
-        /* Space for fixed bottom nav */
+        padding-bottom: 120px !important;
+        /* Increased space for fixed bottom nav + safe area */
+        display: flex;
+        flex-direction: column;
     }
 
     .view-container {
@@ -1173,6 +1188,11 @@ body {
     .top-bar {
         padding: 0 15px;
         height: 70px;
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 1000 !important;
+        background: rgba(11, 17, 32, 0.95) !important;
+        backdrop-filter: blur(20px) !important;
         /* Slightly taller for better touch targets */
         justify-content: space-between !important;
         gap: 15px;
