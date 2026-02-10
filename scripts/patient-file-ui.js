@@ -324,16 +324,39 @@ class PatientFileUI {
         if (!balanceEl || !listEl) return;
 
         const ledger = window.syncManager.data.finances.ledger[this.currentPatientId] || { balance: 0, history: [] };
+        const isNegative = ledger.balance < 0;
+
         balanceEl.textContent = `${ledger.balance} EGP`;
-        balanceEl.style.color = ledger.balance >= 0 ? '#10b981' : '#ef4444';
+        balanceEl.style.color = isNegative ? '#ff4d4d' : '#10b981';
+
+        // Dynamic box color
+        const container = balanceEl.parentElement;
+        if (container) {
+            container.style.background = isNegative ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)';
+            container.style.borderColor = isNegative ? 'rgba(239, 68, 68, 0.2)' : 'rgba(16, 185, 129, 0.2)';
+        }
 
         const transactions = window.syncManager.getTransactionsByClinic().filter(t => t.patientId === this.currentPatientId);
-        listEl.innerHTML = transactions.map(t => `
-            <div style="padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between;">
-                <span style="color: ${t.type === 'income' ? '#10b981' : '#ef4444'}">${t.type === 'income' ? '+' : '-'}${t.amount}</span>
-                <span style="color: #94a3b8; font-size: 0.8rem;">${t.details} (${t.date})</span>
-            </div>
-        `).join('');
+        listEl.innerHTML = transactions.map(t => {
+            const dateStr = t.date ? new Date(t.date).toLocaleString('ar-EG', {
+                year: 'numeric', month: '2-digit', day: '2-digit',
+                hour: '2-digit', minute: '2-digit'
+            }).replace(',', '') : '---';
+
+            const description = t.description || t.details || 'بدون تفاصيل';
+
+            return `
+                <div style="padding: 15px 10px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center;">
+                    <div style="display: flex; flex-direction: column; gap: 5px; text-align: right;">
+                        <span style="color: #ffffff; font-size: 1.15rem; font-weight: 800;">${description}</span>
+                        <span style="color: #94a3b8; font-size: 0.9rem; font-weight: 500;">${dateStr}</span>
+                    </div>
+                    <span style="color: ${t.type === 'income' ? '#10b981' : '#ef4444'}; font-weight: 900; font-size: 1.4rem; text-shadow: 0 0 10px ${t.type === 'income' ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'};">
+                        ${t.type === 'income' ? '+' : '-'}${t.amount}
+                    </span>
+                </div>
+            `;
+        }).join('');
     }
 
     close() { if (this.modal) this.modal.style.display = 'none'; }

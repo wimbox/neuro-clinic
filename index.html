@@ -11,7 +11,7 @@
         href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&family=Inter:wght@400;500;600&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="styles/neuro-ui.css">
+    <link rel="stylesheet" href="styles/neuro-ui.css?v=2.5">
 </head>
 
 <body>
@@ -90,10 +90,10 @@
                 <div class="clinic-selector-container"
                     style="display: flex; align-items: center; gap: 10px; margin-left: 20px;">
                     <div
-                        style="display: flex; align-items: center; gap: 10px; background: #1e293b; padding: 5px 12px; border-radius: 12px; border: 2px solid var(--accent-blue); box-shadow: 0 0 15px rgba(0, 234, 255, 0.1);">
+                        style="display: flex; align-items: center; gap: 10px; background: rgba(15, 23, 42, 0.6); padding: 5px 12px; border-radius: 12px; border: 2px solid var(--accent-blue); box-shadow: 0 0 15px rgba(var(--accent-blue-rgb), 0.1); backdrop-filter: blur(10px);">
                         <i class="fa-solid fa-hospital" style="color: var(--accent-blue); font-size: 1rem;"></i>
                         <select id="clinic-selector"
-                            style="background: transparent; border: none; color: #00eaff; font-weight: 800; font-size: 0.95rem; padding: 5px; cursor: pointer; min-width: 140px; outline: none; font-family: 'Tajawal', sans-serif;">
+                            style="background: transparent; border: none; color: var(--accent-blue); font-weight: 800; font-size: 0.95rem; padding: 5px; cursor: pointer; min-width: 140px; outline: none; font-family: 'Tajawal', sans-serif;">
                             <!-- Populated by JS -->
                         </select>
                         <button id="btn-confirm-clinic" title="تأكيد التبديل وتحديث البيانات"
@@ -139,11 +139,10 @@
                     </a>
                 </div>
 
-                <!-- Theme Switcher Dropdown (New) -->
-                <div class="theme-dropdown desktop-only" style="position: relative; margin-left: 10px;">
-                    <button id="btn-theme-switcher" class="btn-sound-toggle" title="Change Theme"
-                        style="width: auto; padding: 0 12px; gap: 8px;">
-                        <i class="fa-solid fa-palette"></i>
+                <div class="theme-dropdown desktop-only" style="position: relative;">
+                    <button id="btn-theme-switcher" class="header-nav-btn" title="Change Theme"
+                        style="width: auto; padding: 0 15px; gap: 8px; background: rgba(255, 255, 255, 0.05);">
+                        <i class="fa-solid fa-palette" style="color: var(--accent-blue);"></i>
                         <span style="font-size: 0.85rem; font-weight: 700;">Themes</span>
                         <i class="fa-solid fa-chevron-down" style="font-size: 0.7rem; opacity: 0.7;"></i>
                     </button>
@@ -168,66 +167,63 @@
                     </div>
 
                     <script>
-                        document.getElementById('btn-theme-switcher').addEventListener('click', (e) => {
-                            e.stopPropagation();
-                            const menu = document.getElementById('theme-menu');
-                            menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
-                        });
+                        // Theme Switcher Controller
+                        const themeMenu = document.getElementById('theme-menu');
+                        const themeBtn = document.getElementById('btn-theme-switcher');
 
-                        // Close menu when clicking outside
-                        document.addEventListener('click', (e) => {
-                            const menu = document.getElementById('theme-menu');
-                            const btn = document.getElementById('btn-theme-switcher');
-                            if (menu.style.display === 'block' && !menu.contains(e.target) && !btn.contains(e.target)) {
-                                menu.style.display = 'none';
-                            }
-                        });
+                        if (themeBtn && themeMenu) {
+                            themeBtn.addEventListener('click', (e) => {
+                                e.stopPropagation();
+                                const isHidden = themeMenu.style.display === 'none';
+                                themeMenu.style.display = isHidden ? 'block' : 'none';
 
-                        // Theme Selection Logic
-                        document.querySelectorAll('.theme-option').forEach(option => {
-                            option.addEventListener('click', () => {
-                                const theme = option.dataset.theme;
-                                document.body.className = theme;
-                                localStorage.setItem('neuro_theme', theme);
-                                document.getElementById('theme-menu').style.display = 'none';
+                                if (isHidden) {
+                                    themeMenu.style.animation = 'fadeInUp 0.3s ease forwards';
+                                }
                             });
-                        });
+
+                            // Close menu when clicking outside
+                            document.addEventListener('click', (e) => {
+                                if (themeMenu.style.display === 'block' &&
+                                    !themeMenu.contains(e.target) &&
+                                    !themeBtn.contains(e.target)) {
+                                    themeMenu.style.display = 'none';
+                                }
+                            });
+
+                            // Theme Selection Logic
+                            document.querySelectorAll('.theme-option').forEach(option => {
+                                option.addEventListener('click', () => {
+                                    const theme = option.dataset.theme;
+                                    document.body.className = theme;
+                                    localStorage.setItem('neuro_theme', theme);
+                                    themeMenu.style.display = 'none';
+
+                                    // Visual feedback for selected option
+                                    document.querySelectorAll('.theme-option').forEach(opt => opt.style.background = 'transparent');
+                                    option.style.background = 'rgba(255,255,255,0.1)';
+                                });
+                            });
+
+                            // Load saved theme on boot
+                            const savedTheme = localStorage.getItem('neuro_theme') || 'theme-blue';
+                            document.body.className = savedTheme;
+                        }
                     </script>
+
+
                 </div>
 
-                <script>
-                    document.getElementById('btn-theme-switcher').addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        const menu = document.getElementById('theme-menu');
-                        menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
-                    });
-
-                    // Close menu when clicking outside
-                    document.addEventListener('click', (e) => {
-                        const menu = document.getElementById('theme-menu');
-                        const btn = document.getElementById('btn-theme-switcher');
-                        if (menu.style.display === 'block' && !menu.contains(e.target) && !btn.contains(e.target)) {
-                            menu.style.display = 'none';
-                        }
-                    });
-
-                    // Theme Selection Logic
-                    document.querySelectorAll('.theme-option').forEach(option => {
-                        option.addEventListener('click', () => {
-                            const theme = option.dataset.theme;
-                            // Apply theme logic here (you might need to implement the actual CSS class switching on body)
-                            document.body.className = theme;
-                            localStorage.setItem('neuro_theme', theme);
-                            document.getElementById('theme-menu').style.display = 'none';
-                        });
-                    });
-                </script>
-
-                <!-- Sound Toggle Button -->
-                <button id="btn-toggle-sound" class="btn-sound-toggle" title="تبديل الصوت">
-                    <i class="fa-solid fa-volume-high" id="sound-icon"></i>
-                    <span id="sound-text" style="margin-right: 8px;">صوت</span>
-                </button>
+                <!-- Header Actions Group -->
+                <div class="header-actions-group"
+                    style="display: flex; align-items: center; gap: 10px; margin-inline-start: 10px;">
+                    <!-- Sound Toggle Button -->
+                    <button id="btn-toggle-sound" class="header-nav-btn" title="تبديل الصوت"
+                        style="width: auto; padding: 0 15px; background: rgba(255,255,255,0.05);">
+                        <i class="fa-solid fa-volume-high" id="sound-icon" style="color: var(--accent-blue);"></i>
+                        <span id="sound-text" class="desktop-only" style="margin-right: 8px;">الصوت</span>
+                    </button>
+                </div>
             </header>
 
             <!-- Dynamic Content Area -->
@@ -818,11 +814,11 @@
                         <div
                             style="display: flex; gap: 12px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px;">
                             <button type="submit" class="btn-neuro"
-                                style="flex: 1.5; justify-content: center; height: 50px; font-size: 1.1rem;">حفظ
+                                style="flex: 1.5; justify-content: center; height: 50px; font-size: 1.15rem; font-weight: 800;">حفظ
                                 التعديلات</button>
                             <button type="button" id="btn-delete-patient" class="btn-neuro"
-                                style="background: #ef4444; flex: 0.5; justify-content: center; height: 45px; padding: 0 15px;">
-                                <i class="fa-solid fa-trash" style="font-size: 0.9rem;"></i>
+                                style="background: #ef4444; flex: 0.5; justify-content: center; height: 50px; padding: 0 15px;">
+                                <i class="fa-solid fa-trash" style="font-size: 1.1rem;"></i>
                             </button>
                         </div>
                     </form>

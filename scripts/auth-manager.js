@@ -394,28 +394,22 @@ class AuthManager {
                 userBadge = document.createElement('div');
                 userBadge.id = 'user-badge';
                 userBadge.className = 'user-badge';
-                userBadge.style.cssText = `
-                    margin-left: 15px; background: rgba(0, 234, 255, 0.08); 
-                    padding: 8px 18px; border-radius: 12px; font-size: 1rem; 
-                    border: 1px solid rgba(0, 234, 255, 0.3); color: #fff;
-                    display: flex; align-items: center; gap: 10px; font-weight: 700;
-                    height: 48px; box-shadow: 0 0 15px rgba(0, 234, 255, 0.1);
-                `;
                 topBar.prepend(userBadge);
             }
             const icon = role === 'admin' ? 'fa-user-shield' : (role === 'doctor' ? 'fa-user-doctor' : 'fa-user-tie');
             const roleLabel = this.getRoleInArabic(role);
             userBadge.innerHTML = `
-                <div style="width: 32px; height: 32px; background: #0f172a; border-radius: 8px; display: flex; align-items: center; justify-content: center; border: 1px solid #00eaff;">
-                    <i class="fa-solid ${icon}" style="color:var(--accent-blue); font-size: 1rem; filter: drop-shadow(0 0 5px #00eaff);"></i>
+                <div class="user-badge-icon">
+                    <i class="fa-solid ${icon}"></i>
                 </div>
                 <div style="display: flex; flex-direction: column; text-align: right;">
                     <span style="font-size: 0.95rem; line-height: 1;">${name}</span>
-                    <small style="color: #00eaff; font-size: 0.7rem; opacity: 0.8;">${roleLabel}</small>
+                    <small style="color: var(--accent-blue); font-size: 0.7rem; opacity: 0.8;">${roleLabel}</small>
                 </div>
             `;
         }
     }
+
 
     getRoleInArabic(role) {
         const map = { 'admin': 'مدير', 'doctor': 'طبيب', 'secretary': 'سكرتارية' };
