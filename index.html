@@ -62,6 +62,17 @@
 
         <!-- Main Workspace -->
         <main class="neuro-main">
+            <!-- Backup Guardian Alert Banner -->
+            <div id="backup-alert-banner" class="backup-alert-banner" style="display: none;">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <i class="fa-solid fa-triangle-exclamation" style="font-size: 1.4rem;"></i>
+                    <span>تنبيه أمان البيانات: لم يتم عمل نسخة احتياطية منذ أكثر من 24 ساعة!</span>
+                </div>
+                <button onclick="window.dashboardUI.exportFullBackup()" class="btn-pulse-danger">
+                    نسخ احتياطي الآن <i class="fa-solid fa-download"></i>
+                </button>
+            </div>
+
             <div class="top-ticker-bar">
                 <div class="ticker-content">
                     <div class="ticker-item">

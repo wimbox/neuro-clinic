@@ -19,6 +19,9 @@ class SyncManager {
         this.syncQueue = []; // For granular updates
         this.isSyncing = false;
 
+        this.backupHandle = null; // System directory handle for Auto-Guardian
+        this.isAutoBackupEnabled = false;
+
         this.cloudStatus = 'offline';
         this.lastLatency = 0;
         this.syncTimeout = null;
@@ -283,9 +286,29 @@ class SyncManager {
                 clinicName: GLOBAL_CONFIG.CLINIC_NAME,
                 lastSync: null,
                 lastPatientCode: GLOBAL_CONFIG.STARTING_CODE,
-                activeClinicId: 'clinic-default'
+                activeClinicId: 'clinic-default',
+                lastBackup: null // Track the last time a full backup was performed
             }
         };
+    }
+
+    /**
+     * Updates the last backup timestamp and saves.
+     */
+    markBackupSuccessful() {
+        this.data.settings.lastBackup = new Date().toISOString();
+        this.saveLocal();
+        window.dispatchEvent(new CustomEvent('backupStatusChanged'));
+    }
+
+    /**
+     * Checks if a backup is overdue (more than 24 hours).
+     */
+    isBackupOverdue() {
+        if (!this.data.settings.lastBackup) return true;
+        const last = new Date(this.data.settings.lastBackup).getTime();
+        const now = new Date().getTime();
+        return (now - last) > (24 * 60 * 60 * 1000); // 24 Hours
     }
 
     // --- Audit Logging ---
@@ -440,10 +463,41 @@ class SyncManager {
 
         // Debounce cloud sync to avoid rapid consecutive writes
         if (this.syncTimeout) clearTimeout(this.syncTimeout);
-        this.syncTimeout = setTimeout(() => {
+        this.syncTimeout = setTimeout(async () => {
             this.triggerCloudSync();
+
+            // --- Auto-Guardian Backup Logic ---
+            if (this.isAutoBackupEnabled && this.backupHandle) {
+                try {
+                    await this.performAutoBackup();
+                } catch (err) {
+                    console.warn("Auto-Guardian: Automatic background backup failed:", err);
+                    this.isAutoBackupEnabled = false; // Disable if permission lost
+                    window.dispatchEvent(new CustomEvent('backupStatusChanged'));
+                }
+            }
         }, 500); // 0.5s debounce for faster real-time feeling
     }
+
+    /**
+     * Performs a background save to the linked directory.
+     */
+    async performAutoBackup() {
+        if (!this.backupHandle) return;
+
+        const data = this.getBackupJSON();
+        const fileName = `neuro_auto_backup.json`; // Rotating single file for simplicity, or timestamped
+        const fileHandle = await this.backupHandle.getFileHandle(fileName, { create: true });
+        const writable = await fileHandle.createWritable();
+        await writable.write(data);
+        await writable.close();
+
+        this.data.settings.lastBackup = new Date().toISOString();
+        localStorage.setItem(this.DB_KEY, JSON.stringify(this.data));
+        window.dispatchEvent(new CustomEvent('backupStatusChanged'));
+        console.log("Auto-Guardian: Data automatically backed up to local folder.");
+    }
+
 
     /**
      * Real-time listener for Firestore changes.

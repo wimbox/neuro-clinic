@@ -9,6 +9,68 @@
     --text-primary: #f3f4f6;
     --text-secondary: #94a3b8;
     --neon-shadow: 0 0 20px rgba(0, 234, 255, 0.2);
+    --danger-red: #ef4444;
+}
+
+/* Backup Guardian Alert */
+.backup-alert-banner {
+    background: linear-gradient(90deg, #7f1d1d, #ef4444);
+    color: #fff;
+    padding: 12px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 2000;
+    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+    font-weight: 700;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+    animation: bannerSlideDown 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.backup-alert-banner i {
+    animation: pulseIcon 1s infinite alternate;
+}
+
+@keyframes bannerSlideDown {
+    from {
+        transform: translateY(-100%);
+    }
+
+    to {
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulseIcon {
+    from {
+        opacity: 0.5;
+        transform: scale(0.9);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1.1);
+    }
+}
+
+/* Helper for Pulse Button */
+.btn-pulse-danger {
+    background: #ef4444 !important;
+    color: #fff !important;
+    border: none !important;
+    padding: 8px 20px !important;
+    border-radius: 8px !important;
+    font-weight: 800 !important;
+    cursor: pointer !important;
+    box-shadow: 0 0 15px rgba(239, 68, 68, 0.6) !important;
+    transition: 0.3s !important;
+}
+
+.btn-pulse-danger:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 25px rgba(239, 68, 68, 0.8) !important;
 }
 
 .doctor-brand-badge {

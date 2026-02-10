@@ -214,7 +214,25 @@ class DashboardUI {
             }
         });
 
+        // Backup Guardian Monitoring
+        window.addEventListener('backupStatusChanged', () => this.checkBackupGuardian());
+        this.checkBackupGuardian();
+
+        // Check every 30 mins
+        setInterval(() => this.checkBackupGuardian(), 30 * 60 * 1000);
+
         setTimeout(() => window.soundManager.playStartup(), 1000);
+    }
+
+    checkBackupGuardian() {
+        const banner = document.getElementById('backup-alert-banner');
+        if (!banner) return;
+
+        if (window.syncManager.isBackupOverdue()) {
+            banner.style.display = 'flex';
+        } else {
+            banner.style.display = 'none';
+        }
     }
 
     printMonthlyReport() {
@@ -1785,6 +1803,21 @@ class DashboardUI {
                             <p style="color: #ef4444; font-size: 0.7rem; margin-top: 10px;">⚠️ سيتم مسح واستبدال كافة البيانات</p>
                         </div>
 
+                        <div style="padding: 20px; border: 2px solid var(--accent-blue); border-radius: 15px; text-align: center; background: rgba(0, 234, 255, 0.05); grid-column: span 2;">
+                            <h4 style="color: var(--accent-blue); margin-bottom: 15px;"><i class="fa-solid fa-folder-tree"></i> درع الحماية التلقائي (Auto-Guardian)</h4>
+                            <p style="color: #94a3b8; font-size: 0.85rem; margin-bottom: 20px;">اربط مجلد على جهازك وسيقوم البرنامج بحفظ نسخة احتياطية "تلقائياً" كلما قمت بتغيير بيانات أو إضافة مريض.</p>
+                            
+                            <div id="folder-sync-status" style="margin-bottom: 15px; font-weight: 700;">
+                                ${window.syncManager.isAutoBackupEnabled ?
+                    '<span style="color: #10b981;"><i class="fa-solid fa-shield-check"></i> الحالة: مفعل (الحماية التلقائية تعمل)</span>' :
+                    '<span style="color: #64748b;"><i class="fa-solid fa-circle-dot"></i> الحالة: غير مفعل (اضغط للربط)</span>'}
+                            </div>
+
+                            <button onclick="window.dashboardUI.linkBackupFolder()" class="btn-neuro" style="background: ${window.syncManager.isAutoBackupEnabled ? 'rgba(0, 234, 255, 0.1)' : 'var(--accent-blue)'}; color: ${window.syncManager.isAutoBackupEnabled ? 'var(--accent-blue)' : '#000'}; font-weight: 800; border: ${window.syncManager.isAutoBackupEnabled ? '1px solid var(--accent-blue)' : 'none'}; padding: 12px 30px;">
+                                <i class="fa-solid ${window.syncManager.isAutoBackupEnabled ? 'fa-rotate' : 'fa-link'}"></i> ${window.syncManager.isAutoBackupEnabled ? 'تغيير المجلد المرتبط' : 'ربط مجلد الحفظ التلقائي'}
+                            </button>
+                        </div>
+
                         <div style="padding: 20px; border: 1px dashed rgba(16, 185, 129, 0.3); border-radius: 15px; text-align: center; background: rgba(16, 185, 129, 0.05);">
                             <h4 style="color: #10b981; margin-bottom: 15px;">استيراد مرضى من (CSV)</h4>
                             <input type="file" id="restore-csv-input" accept=".csv" style="display: none;" onchange="window.dashboardUI.handleRestoreCSV(event)">
@@ -1850,6 +1883,7 @@ class DashboardUI {
                 const writable = await handle.createWritable();
                 await writable.write(data);
                 await writable.close();
+                window.syncManager.markBackupSuccessful(); // Successful auto-backup
                 window.soundManager?.playSuccess();
                 return;
             } catch (err) {
@@ -1866,6 +1900,7 @@ class DashboardUI {
         a.download = `neuro_clinic_backup_${new Date().toISOString().split('T')[0]}.json`;
         a.click();
         URL.revokeObjectURL(url);
+        window.syncManager.markBackupSuccessful(); // Successful legacy-backup
         window.soundManager?.playSuccess();
     }
 
@@ -1905,6 +1940,41 @@ class DashboardUI {
         a.click();
         URL.revokeObjectURL(url);
         window.soundManager?.playSuccess();
+    }
+
+    async linkBackupFolder() {
+        if (!('showDirectoryPicker' in window)) {
+            window.showNeuroModal('غير مدعوم', 'عذراً، متصفحك لا يدعم ربط المجلدات المباشر. يرجى استخدام متصفح Google Chrome أو Edge.', null, false);
+            return;
+        }
+
+        try {
+            const handle = await window.showDirectoryPicker({
+                mode: 'readwrite'
+            });
+
+            // Test Permission
+            const permission = await handle.queryPermission({ mode: 'readwrite' });
+            if (permission !== 'granted') {
+                await handle.requestPermission({ mode: 'readwrite' });
+            }
+
+            window.syncManager.backupHandle = handle;
+            window.syncManager.isAutoBackupEnabled = true;
+
+            // Immediate first backup
+            await window.syncManager.performAutoBackup();
+
+            window.showNeuroToast('تم تفعيل درع الحماية وربط المجلد بنجاح!', 'success');
+            window.soundManager?.playSuccess();
+
+            // Refresh Settings UI
+            this.loadSettingsView();
+        } catch (err) {
+            if (err.name === 'AbortError') return;
+            console.error("Folder Link Failed:", err);
+            window.showNeuroToast('فشل ربط المجلد. يرجى التأكد من إعطاء الصلاحيات.', 'error');
+        }
     }
 
     handleRestoreBackup(event) {
