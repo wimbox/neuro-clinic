@@ -221,7 +221,60 @@ class DashboardUI {
         // Check every 30 mins
         setInterval(() => this.checkBackupGuardian(), 30 * 60 * 1000);
 
+        // Scroll Navigator Listener
+        const container = this.getScrollContainer();
+        const scrollTarget = container === window ? window : container;
+        scrollTarget.addEventListener('scroll', () => this.handleScrollNavigator());
+
         setTimeout(() => window.soundManager.playStartup(), 1000);
+    }
+
+    getScrollContainer() {
+        const desktopScroll = document.getElementById('main-content-view');
+        // On mobile, the body/window scrolls. On desktop, the dedicated div scrolls.
+        if (window.innerWidth <= 1024 || !desktopScroll) return window;
+        return desktopScroll;
+    }
+
+    handleScrollNavigator() {
+        const btnTop = document.getElementById('btn-scroll-top');
+        const btnStepUp = document.getElementById('btn-scroll-step-up');
+        if (!btnTop || !btnStepUp) return;
+
+        const container = this.getScrollContainer();
+        const scrollTop = container === window ? window.scrollY : container.scrollTop;
+
+        // Show 'up' controls after 300px scroll
+        if (scrollTop > 300) {
+            btnTop.classList.remove('hidden');
+            btnStepUp.classList.remove('hidden');
+        } else {
+            btnTop.classList.add('hidden');
+            btnStepUp.classList.add('hidden');
+        }
+    }
+
+    scrollToTop() {
+        const container = this.getScrollContainer();
+        container.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    scrollToBottom() {
+        const container = this.getScrollContainer();
+        const target = container === window ? document.body.scrollHeight : container.scrollHeight;
+        container.scrollTo({ top: target, behavior: 'smooth' });
+    }
+
+    scrollStepDown() {
+        const container = this.getScrollContainer();
+        const current = container === window ? window.scrollY : container.scrollTop;
+        container.scrollTo({ top: current + 400, behavior: 'smooth' });
+    }
+
+    scrollStepUp() {
+        const container = this.getScrollContainer();
+        const current = container === window ? window.scrollY : container.scrollTop;
+        container.scrollTo({ top: current - 400, behavior: 'smooth' });
     }
 
     checkBackupGuardian() {

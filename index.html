@@ -940,7 +940,25 @@
             }
         });
     </script>
+    <!-- Floating Scroll Navigator -->
+    <div class="scroll-navigator">
+        <div id="btn-scroll-top" class="scroll-nav-btn hidden" title="إلى القمة"
+            onclick="window.dashboardUI.scrollToTop()">
+            <i class="fa-solid fa-angles-up"></i>
+        </div>
+        <div id="btn-scroll-step-up" class="scroll-nav-btn hidden" title="تحريك للأعلى قليلاً"
+            onclick="window.dashboardUI.scrollStepUp()">
+            <i class="fa-solid fa-chevron-up"></i>
+        </div>
+        <div id="btn-scroll-step-down" class="scroll-nav-btn" title="تحريك للأسفل قليلاً"
+            onclick="window.dashboardUI.scrollStepDown()">
+            <i class="fa-solid fa-chevron-down"></i>
+        </div>
+        <div id="btn-scroll-bottom" class="scroll-nav-btn" title="إلى القاع"
+            onclick="window.dashboardUI.scrollToBottom()">
+            <i class="fa-solid fa-angles-down"></i>
+        </div>
+    </div>
 </body>
-
 
 </html>
